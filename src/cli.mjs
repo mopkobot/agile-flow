@@ -2,6 +2,7 @@ import { writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { initFlow, loadState, saveState, StateError, GATES, agileDir } from './state.mjs';
 import { detectStack, renderProfile } from './stack.mjs';
+import { nextAction } from './phases.mjs';
 
 export async function run(argv, cwd = process.cwd()) {
   const [command, ...rest] = argv;
@@ -11,6 +12,10 @@ export async function run(argv, cwd = process.cwd()) {
         return await cmdInit(rest, cwd);
       case 'status':
         return await cmdStatus(cwd);
+      case 'next':
+        return await cmdNext(cwd);
+      case 'resume':
+        return await cmdResume(rest, cwd);
       default:
         return usage();
     }
@@ -71,8 +76,40 @@ async function cmdStatus(cwd) {
   return 0;
 }
 
+async function cmdNext(cwd) {
+  const state = await loadState(cwd);
+  const action = nextAction(state);
+  console.log(`phase: ${action.phase}`);
+  console.log(`role: ${action.role}`);
+  console.log(`gate: ${action.gate ?? 'none'}`);
+  for (const input of action.inputs) console.log(`input: ${input}`);
+  if (action.blocked) {
+    console.log(`blocked: ${action.blocked}`);
+    return 3;
+  }
+  return 0;
+}
+
+async function cmdResume(args, cwd) {
+  const note = flag(args, 'note');
+  const state = await loadState(cwd);
+  if (!note || !note.trim()) {
+    console.error('error: resume requires --note with the human resolution');
+    return 1;
+  }
+  if (!state.escalation) {
+    console.error('error: no escalation to resume from');
+    return 1;
+  }
+  state.escalation = null;
+  state.lastResolution = { note, at: new Date().toISOString() };
+  await saveState(cwd, state);
+  console.log('escalation cleared');
+  return 0;
+}
+
 function usage() {
-  console.error('usage: agile-flow <init|status> [options]');
+  console.error('usage: agile-flow <init|status|next|resume> [options]');
   return 1;
 }
 
