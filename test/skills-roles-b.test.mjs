@@ -34,3 +34,18 @@ test('architect owns system structure and tech lead owns implementation directio
   assert.match(t, /seam|plan\.md/i);
   assert.match(t, /must_not:[\s\S]*architecture\//);
 });
+
+test('tech lead review enforces code smells and clean code', async () => {
+  const t = await readFile(join(root, 'agile-tech-lead', 'SKILL.md'), 'utf8');
+  for (const term of ['Code smells', 'Clean code', 'Duplication', 'Long function', 'Primitive obsession', 'Refactor']) {
+    assert.match(t, new RegExp(term, 'i'), term);
+  }
+  assert.match(t, /finding/i);
+});
+
+test('architect selects patterns from the problem and evolves the architecture', async () => {
+  const a = await readFile(join(root, 'agile-architect', 'SKILL.md'), 'utf8');
+  for (const term of ['Evolutionary architecture', 'fitness function', 'pattern', 'strangler', 'modular', 'trade-off']) {
+    assert.match(a, new RegExp(term, 'i'), term);
+  }
+});

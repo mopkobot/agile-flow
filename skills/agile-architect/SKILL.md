@@ -64,6 +64,39 @@ Write `architecture/system.md` with `## System`:
 
 Keep diagrams as code, in the repository, versioned with the decisions they explain.
 
+### Evolutionary architecture
+
+The architecture's goal is to be the best fit for this problem now and cheap to change as the problem moves. It is not a fixed blueprint.
+
+- Record the qualities that must survive change. Those are the architectural characteristics, and each gets a fitness function.
+- Prefer decisions that are cheap to reverse. A reversible choice needs a note; an irreversible one needs an ADR and the strongest evidence available.
+- Make the first increment the simplest structure that satisfies the current NFRs. Do not pre-build for a scale or a second consumer that does not exist.
+- Plan the evolution: name the seam where the next expected change lands, and the trigger that would force a split or an extraction.
+- Treat every accepted ADR as revisable. When evidence contradicts it, supersede it rather than defending it.
+- Fitness functions run in CI. An architecture that cannot be checked drifts silently.
+
+### Pattern selection
+
+Choose patterns from the problem and the NFRs, not from fashion. For each candidate, state why it fits this problem and what it costs.
+
+| Problem shape | Candidate | Use when |
+|---|---|---|
+| Simple domain, small team, unclear boundaries | Modular monolith | Default. One deployable, explicit internal modules. |
+| Domain with distinct subdomains and their own language | Bounded contexts, then modules | Boundaries are stable enough to name. |
+| Volatile external systems or testability is poor | Ports and adapters (hexagonal) | The core must be independent of transport, storage, or vendor. |
+| Brownfield replacement | Strangler fig | New behavior can be routed incrementally while the old path still serves. |
+| Genuine asynchronous workload with independent scaling | Event-driven, queue or stream | Latency, throughput, or failure isolation demands decoupling. |
+| Read and write models diverge sharply | CQRS, and only then event sourcing | Independent scaling or auditability is a real requirement. |
+| Multiple teams shipping independently | Service boundaries aligned to contexts | Team ownership and deploy cadence, not code size, forces the split. |
+
+Rules:
+
+- Justify every pattern against at least one NFR or one team constraint. "Best practice" is not a justification.
+- Prefer the smaller structure. A modular monolith is the default until a measured force says otherwise.
+- Never adopt a pattern whose operational cost the SRE role cannot support.
+- Write the trade-off in the ADR: what the pattern buys, what it costs, and what would make you reverse it.
+- Do not apply tactical DDD patterns (aggregates, repositories, domain events) as a checklist. Use them where the domain's invariants need them; tech radar stays advisory.
+
 ### NFRs
 
 Write `architecture/nfrs.md` with `## NFRs`, one table:

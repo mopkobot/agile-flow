@@ -86,19 +86,52 @@ Rules:
 
 ### Review
 
-Write `build/<story-id>/review.md` with `## Verdict` and one of `pass`, `fail`, `pass-with-risk`.
+You review every story's code. Review is not a formality and not a style preference: it is how the codebase stays changeable.
 
-Check:
+Write `build/<story-id>/review.md` with `## Verdict`, one of `pass`, `fail`, `pass-with-risk`, and the required `reviewer:` and `implementer:` identity lines.
+
+#### Correctness
 
 - Every acceptance criterion has a test that fails without the change.
 - Tests assert behavior, not implementation details. No assertion on a mock's call count unless the call is the behavior.
-- No duplicated business rule. If a rule appears twice, one copy is the owner and the other delegates.
 - The change fits the seams named in `plan.md`. A surprise seam means the plan was wrong; say so.
 - No new dependency without an ADR or an explicit debt entry.
 - Error paths are handled, not swallowed.
 - Observability hooks exist for the new behavior.
 
-A `pass-with-risk` requires a named debt entry. A `pass` with unrecorded debt is a failed review.
+#### Code smells
+
+Name each finding with its location and the cost it imposes. Do not rewrite the code; direct the refactor and re-review it.
+
+- **Duplication.** The same rule, decision, or mapping in two places. One copy owns it, the other delegates.
+- **Long function or class.** More than one reason to change, or more levels of nesting than a reader can hold. Extract by responsibility, not by line count.
+- **Primitive obsession.** A domain concept passed as a bare string, number, or boolean pair. Introduce the type where invalid states become unrepresentable.
+- **Feature envy and misplaced behavior.** A function reading another module's data more than its own. Move the behavior to the data's owner.
+- **Shotgun surgery.** One change forcing edits in many files. The boundary is wrong.
+- **Divergent change.** One module changing for unrelated reasons. Split by reason to change.
+- **Speculative generality.** Abstraction with one implementation and no named second consumer. Delete it.
+- **Temporal coupling and hidden order.** Functions that only work in a particular call sequence. Make the dependency explicit.
+- **Leaky abstraction.** A caller forced to know storage, protocol, or framework detail.
+- **Dead code, commented-out code, and misleading names.** Delete or rename; do not leave breadcrumbs.
+- **Inconsistent error handling.** Mixed patterns in the same layer.
+
+#### Clean code
+
+- Names state intent, in the domain's language, without abbreviations the domain does not use.
+- Functions do one thing at one level of abstraction.
+- Comments explain why, never what. A comment restating the code is deleted.
+- No magic values; name the constant.
+- Dependencies point in the allowed direction; no cycles.
+- Public surface is the smallest that satisfies the story.
+
+#### Verdict rules
+
+- `fail` on any correctness gap, any unresolved smell that compounds interest, or unreadable code.
+- `pass-with-risk` requires a named debt entry with owner and repayment trigger, and a waiver specific to that risk.
+- `pass` with unrecorded debt is a failed review.
+- Two `fail` verdicts on one story escalate per the flow.
+
+Record every finding, including ones you fixed by direction in the same review cycle, so the debt register and the retro have evidence.
 
 ### Sign
 
