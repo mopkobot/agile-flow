@@ -61,7 +61,7 @@ Before discovery, ask the operator one question and record the answer:
 
 > What percentage of every sprint should be reserved for technical debt?
 
-Run `node bin/agile-flow.mjs debt set <percent>` (or pass `--debt-percent` to `init`). This is a standing commitment, not a per-sprint negotiation. G2 refuses a sprint plan whose debt section declares a different percentage or whose weighted debt work falls below it. If the operator wants to change the allocation later, they change it explicitly with `debt set`, and the change applies from that sprint.
+Run `node bin/agile-flow.mjs debt set <percent>` (or pass `--debt-percent` to `init`). This is a standing commitment, not a per-sprint negotiation. G2 refuses a sprint plan whose debt section declares a different percentage, whose weighted debt work falls below it, or whose rows do not resolve to a real story or debt row. G3 refuses when planned debt stories were not completed. If the operator wants to change the allocation later, they change it explicitly with `debt set`, and the change applies from that sprint.
 
 After initializing a **brownfield** repository, run `node bin/agile-flow.mjs harness`. If it reports gaps, ask the operator one question before any discovery work:
 
@@ -137,7 +137,7 @@ The auditor must not be a role that authored the artifacts it checks. If it is, 
 - Sprint planning, in the planning phase: `agile-po` proposes scope from priority order, and `agile-tech-lead` supplies the debt items from the register. Write `plan/sprint-<NN>.md` containing `## Debt allocation` with `percent:` equal to the configured allocation and a weighted table (`story | size | debt`), then the stories. G2 refuses a plan that under-allocates debt.
 - Demo, in the release phase: `agile-po` writes the demo script into `release/release-notes.md`.
 - Retro, after G4: write `retro/retro-<NN>.md` from `templates/retro.md`. Every action gets a type and target. Then close the loop:
-  - `process` actions change how the team works. Draft the edit to `skills/<target>/SKILL.md`, show the operator the exact diff, and apply it only after approval. The installed skills are symlinks into this repository, so the change is live immediately. Run `node bin/agile-flow.mjs skills` and `node --test` after the edit, then commit.
+  - `process` actions change how the team works. Draft the edit to `skills/<target>/SKILL.md`, show the operator the exact diff, and apply it only after approval. The installed skills are symlinks into this repository, so the change is live immediately. Run `node bin/agile-flow.mjs skills` and `node --test` after the edit, then commit. Then ask the operator to run `node bin/agile-flow.mjs retro approve --target <skill> --note "<what they approved>"`; the sprint cannot close without that recorded approval.
   - `product` actions become cards. Spawn `agile-po` to add the backlog row, then `agile-ba` to shape the story, then `tracker sync` to create the GitHub issue if a tracker is configured.
   - `debt` actions become rows in `docs/agile/architecture/debt.md`, owned by `agile-tech-lead`.
   - `dropped` actions keep a written reason.

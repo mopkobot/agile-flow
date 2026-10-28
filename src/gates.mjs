@@ -2,7 +2,7 @@ import { execFile } from 'node:child_process';
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { agileDir, loadState, saveState } from './state.mjs';
-import { globToRegExp, ROLE_SCOPE, checkBoundary } from './boundary.mjs';
+import { globToRegExp, ROLE_SCOPE, checkBoundary, changedPaths } from './boundary.mjs';
 import { parseProfile } from './stack.mjs';
 import { readReviews, validateReviews } from './reviews.mjs';
 import { activeWaivers, waiverCovers } from './waivers.mjs';
@@ -168,6 +168,23 @@ function runCommand(root, command) {
   });
 }
 
+export function changedCoveragePercent(output, changedFiles = []) {
+  if (changedFiles.length === 0) return null;
+  const rows = output.split('\n').filter((l) => /\|/.test(l) && /\d/.test(l));
+  const parsed = new Map();
+  for (const row of rows) {
+    const cells = row.replace(/^#\s*/, '').split('|').map((c) => c.trim());
+    const file = cells[0];
+    const pct = Number(cells[1]);
+    if (file && Number.isFinite(pct)) parsed.set(file.replace(/^\/.*?\/(?=src|app|lib|test)/, ''), pct);
+  }
+  const values = changedFiles
+    .map((f) => parsed.get(f))
+    .filter((v) => v !== undefined);
+  if (values.length === 0) return null;
+  return Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 100) / 100;
+}
+
 export function coveragePercent(output) {
   const allLine = output.split('\n').find((line) => /all files/i.test(line));
   if (allLine) {
@@ -210,7 +227,7 @@ export async function validateTddEvidence(root) {
   return failures;
 }
 
-export async function runChecks(root, profile, names = ['test', 'coverage', 'lint', 'build', 'secretScan']) {
+export async function runChecks(root, profile, names = ['test', 'coverage', 'lint', 'build', 'secretScan'], changedFiles = []) {
   const results = [];
   if (!profile) {
     return { ok: false, results: [{ name: 'stack-profile', ok: false, detail: 'docs/agile/stack-profile.md not found or unreadable' }] };
@@ -231,7 +248,7 @@ export async function runChecks(root, profile, names = ['test', 'coverage', 'lin
         results.push({ name, ok: true, detail: `threshold enforced by the command: ${command}` });
         continue;
       }
-      const percent = coveragePercent(result.output ?? '');
+      const percent = changedCoveragePercent(result.output ?? '', changedFiles ?? []) ?? coveragePercent(result.output ?? '');
       if (percent === null) {
         results.push({ name, ok: false, detail: `coverage command reported no percentage and enforces no threshold: ${command} :: ${(result.output ?? '').slice(-300)}` });
         continue;
@@ -385,17 +402,28 @@ export async function checkGate(root, gate) {
     if (percent === undefined || percent === null) {
       failures.push('no debt allocation configured; run "agile-flow debt set <percent>"');
     } else {
+      const { checkPlanResolves } = await import('./debt.mjs');
       const planDir = join(agileDir(root), 'plan');
       const plans = (await readdir(planDir).catch(() => [])).filter((f) => /^sprint-.*\.md$/.test(f));
       const latest = plans.sort().pop();
       if (!latest) failures.push('no sprint plan to validate against the debt allocation');
-      else failures.push(...checkDebtAllocation(await readFile(join(planDir, latest), 'utf8'), percent));
+      else {
+        const planText = await readFile(join(planDir, latest), 'utf8');
+        failures.push(...checkDebtAllocation(planText, percent));
+        const backlog = await readFile(join(agileDir(root), 'backlog.md'), 'utf8').catch(() => '');
+        const debt = await readFile(join(agileDir(root), 'architecture/debt.md'), 'utf8').catch(() => '');
+        failures.push(...checkPlanResolves(planText, { backlog, debt }));
+      }
     }
   }
   if (gate === 'G1') {
     failures.push(...(await validateNfrMeasurements(root)));
   }
   if (gate === 'G3') {
+    const { checkDebtCompletion } = await import('./debt.mjs');
+    const planDir = join(agileDir(root), 'plan');
+    const latest = (await readdir(planDir).catch(() => [])).filter((f) => /^sprint-.*\.md$/.test(f)).sort().pop();
+    if (latest) failures.push(...checkDebtCompletion(await readFile(join(planDir, latest), 'utf8'), state));
     failures.push(...(await validateTddEvidence(root)));
     failures.push(...(await validateStoryLinkage(root, state)));
     for (const rel of await expandArtifacts(root, 'build/*/review.md')) {
@@ -415,7 +443,9 @@ export async function checkGate(root, gate) {
   }
 
   const profile = await loadProfile(root);
-  const checks = await runChecks(root, profile, def.checks);
+  const changed = state.stageBase ? await changedPaths(root, state.stageBase, state.stageIgnored ?? []) : [];
+  const changedCode = changed.filter((p) => /\.(mjs|js|ts|tsx|jsx|py|go|rs|java|rb)$/.test(p));
+  const checks = await runChecks(root, profile, def.checks, changedCode);
   for (const result of checks.results) {
     if (!result.ok) failures.push(`check ${result.name}: ${result.detail}`);
   }

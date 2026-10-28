@@ -138,3 +138,11 @@ test('a token expires and stops signing', async () => {
   assert.equal(check.ok, false);
   assert.match(check.reason, /expired/);
 });
+
+test('tracker sync updates the issue body from the story', async () => {
+  const dir = await repo();
+  const gh = await fakeGh(dir, '[{"number":7,"title":"S-001 Greet"}]');
+  assert.equal(await run(['tracker', 'sync'], dir, { env: gh.env }), 0);
+  const calls = await gh.log();
+  assert.ok(calls.some((c) => c.includes('--body-file')), calls.join('\n'));
+});

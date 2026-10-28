@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { checkRetroActions, parseRetroActions } from '../src/retro.mjs';
 import { run } from '../src/cli.mjs';
 import { freshState } from '../src/state.mjs';
+import { hashPassphrase } from '../src/auth.mjs';
 
 async function repo(retro) {
   const dir = await mkdtemp(join(tmpdir(), 'af-retro-'));
@@ -17,9 +18,9 @@ async function repo(retro) {
   await mkdir(join(base, 'retro'), { recursive: true });
   await mkdir(join(base, 'architecture'), { recursive: true });
   await mkdir(join(base, 'stories'), { recursive: true });
-  await writeFile(join(base, 'state.json'), JSON.stringify({ ...freshState('greenfield'), phase: 'retro', sprint: 1 }));
+  await writeFile(join(base, 'state.json'), JSON.stringify({ ...freshState('greenfield'), phase: 'retro', sprint: 1, humanAuth: hashPassphrase('test-passphrase') }));
   await writeFile(join(base, 'retro/retro-01.md'), retro);
-  await writeFile(join(base, 'backlog.md'), '# Backlog\n\n## Backlog\n| rank | id | title |\n|---|---|---|\n| 1 | S-001 | greet |\n');
+  await writeFile(join(base, 'backlog.md'), '# Backlog\n\n## Backlog\n| rank | id | title |\n|---|---|---|\n| 1 | S-001 | greet |\n| 2 | S-002 | farewell |\n');
   await writeFile(join(base, 'architecture/debt.md'), '# Debt\n\n## Debt\n| id | debt |\n|---|---|\n| D-001 | routing |\n');
   return dir;
 }
@@ -60,4 +61,15 @@ test('dropped actions must carry a reason', async () => {
 test('advance out of retro is blocked by an invalid action', async () => {
   const dir = await repo(GOOD.replace('| D-001 |', '| D-404 |'));
   assert.equal(await run(['advance'], dir), 1);
+});
+
+test('a process action needs a recorded approval before the sprint closes', async () => {
+  const dir = await repo(GOOD.replace('| D-001 |', '| D-001 |'));
+  process.env.AGILE_HUMAN_PASSPHRASE ||= 'test-passphrase';
+  const before = await checkRetroActions(dir, 1);
+  assert.ok(before.some((f) => /approval/i.test(f)), before.join('\n'));
+
+  assert.equal(await run(['retro', 'approve', '--target', 'agile-tech-lead', '--note', 'diff reviewed, tests green'], dir), 0);
+  const after = await checkRetroActions(dir, 1);
+  assert.deepEqual(after, []);
 });

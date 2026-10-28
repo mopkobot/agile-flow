@@ -165,7 +165,7 @@ Gate failure path: retry once with corrective instructions supplied by the faili
 
 ### 5.2 Tech debt allocation
 
-The operator sets a percentage of every sprint reserved for technical debt at intake (`--debt-percent` or `debt set`). State stores it in `debtAllocation`. The sprint plan declares the same percentage and a weighted table mapping each story to a size and a debt flag. G2 refuses a plan whose declared percentage differs or whose debt weight share falls below the allocation. Weight is small 1, medium 2, large 3; estimation beyond that stays out of scope.
+The operator sets a percentage of every sprint reserved for technical debt at intake (`--debt-percent` or `debt set`). State stores it in `debtAllocation`. The sprint plan declares the same percentage and a weighted table mapping each story to a size and a debt flag. Every row must resolve to a backlog story or a debt row. G2 refuses a plan whose declared percentage differs or whose debt weight share falls below the allocation; G3 refuses when planned debt stories are not complete. Weight is small 1, medium 2, large 3; estimation beyond that stays out of scope.
 
 ## 6. Build inner loop
 
@@ -310,6 +310,7 @@ Human-signed only. A waiver names the gate, the requirement waived, the reason, 
 | `setup-human` | Sets or rotates the human passphrase | 0, 1 |
 | `harness` | Reports present and missing AI-harness elements, with a fix per gap | 0 complete, 1 gaps |
 | `debt set <percent>` | Sets the standing sprint debt allocation | 0, 1 |
+| `retro approve --target <skill> --note <text>` | Human-signed approval for a process action | 0, 1 |
 | `identity issue --role <role>` | Human-authenticated: issues a role token, stores only its hash | 0, 1 |
 | `audit sample` | Prints citable claims sampled for verification | 0, 1 |
 | `audit record` | Records a passing or failing audit for a gate | 0, 1 |

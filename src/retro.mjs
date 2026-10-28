@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { agileDir } from './state.mjs';
+import { readReviews } from './reviews.mjs';
 
 const TYPES = ['process', 'product', 'debt', 'dropped'];
 const FLOW_SKILLS = join(dirname(fileURLToPath(import.meta.url)), '..', 'skills');
@@ -41,6 +42,8 @@ export async function checkRetroActions(root, sprint) {
   const backlog = await readFile(join(agileDir(root), 'backlog.md'), 'utf8').catch(() => '');
   const debt = await readFile(join(agileDir(root), 'architecture/debt.md'), 'utf8').catch(() => '');
 
+  const approvals = await readReviews(root, `retro-${String(sprint).padStart(2, '0')}-process`).catch(() => []);
+
   for (const action of actions) {
     if (!TYPES.includes(action.type)) {
       failures.push(`action "${action.action}" has unknown type "${action.type}"`);
@@ -50,6 +53,13 @@ export async function checkRetroActions(root, sprint) {
     if (action.type === 'process') {
       if (!existsSync(join(FLOW_SKILLS, action.target, 'SKILL.md'))) {
         failures.push(`process action "${action.action}" targets unknown skill "${action.target}"`);
+      } else {
+        const approved = approvals.some(
+          (r) => r.role === 'human' && r.verdict === 'pass' && r.gate === `retro-${String(sprint).padStart(2, '0')}-process-${action.target}`,
+        );
+        if (!approved) {
+          failures.push(`process action "${action.action}" targets ${action.target} without a recorded approval`);
+        }
       }
     }
     if (action.type === 'product') {

@@ -24,9 +24,20 @@ export async function listClaims(root, count = 5) {
   const state = await loadState(root).catch(() => ({ audits: {} }));
   const offset = Object.values(state.audits ?? {}).reduce((sum, a) => sum + (a.checked ?? 0), 0);
   if (claims.length === 0) return [];
+
+  const score = (claim) => {
+    if (/security|auth|secret|permission|injection|xss|csrf/i.test(claim)) return 3;
+    if (/coverage|load|slo|latency|p95|error budget|availability/i.test(claim)) return 2;
+    return 1;
+  };
+  const ranked = claims
+    .map((claim, index) => ({ claim, index, score: score(claim) }))
+    .sort((a, b) => b.score - a.score || a.index - b.index)
+    .map((entry) => entry.claim);
+
   const picked = [];
-  for (let i = 0; i < Math.min(count, claims.length); i++) {
-    picked.push(claims[(offset + i) % claims.length]);
+  for (let i = 0; i < Math.min(count, ranked.length); i++) {
+    picked.push(ranked[(offset + i) % ranked.length]);
   }
   return picked;
 }

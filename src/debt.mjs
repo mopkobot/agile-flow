@@ -36,6 +36,44 @@ function section(text, heading) {
   return (next === -1 ? after : after.slice(0, next)).trim();
 }
 
+export function planRows(planText) {
+  const debtSection = section(planText, '## Debt allocation') ?? '';
+  const rows = debtSection.split('\n').filter((l) => /^\|/.test(l) && !/^\|\s*-/.test(l));
+  return rows.slice(1).map((row) => {
+    const [id, size, debt] = row.split('|').slice(1, -1).map((c) => c.trim());
+    return { id, size, debt: /^yes$/i.test(debt) };
+  });
+}
+
+export function checkPlanResolves(planText, { backlog, debt }) {
+  const failures = [];
+  for (const row of planRows(planText)) {
+    if (!row.id) {
+      failures.push('debt allocation has a row with no story id');
+      continue;
+    }
+    if (/^D-\d+$/i.test(row.id)) {
+      if (!debt.includes(row.id)) failures.push(`plan references unknown debt row ${row.id}`);
+      continue;
+    }
+    if (!backlog.includes(row.id)) failures.push(`plan references unknown story ${row.id} (not in backlog)`);
+  }
+  return failures;
+}
+
+export function checkDebtCompletion(planText, state) {
+  const failures = [];
+  for (const row of planRows(planText)) {
+    if (!row.debt) continue;
+    if (/^D-\d+$/i.test(row.id)) continue;
+    const story = state.stories?.[row.id];
+    if (!story || story.dod !== 'pass') {
+      failures.push(`planned debt story ${row.id} is not done`);
+    }
+  }
+  return failures;
+}
+
 export function checkDebtAllocation(planText, requiredPercent) {
   const failures = [];
   const debtSection = section(planText, '## Debt allocation');

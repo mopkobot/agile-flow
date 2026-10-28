@@ -156,6 +156,18 @@ async function cmdStatus(cwd) {
     console.log(`escalation: ${state.escalation.reason}`);
     console.log(`question: ${state.escalation.question}`);
   }
+  const debt = state.debtAllocation;
+  console.log(`debt allocation: ${debt ? `${debt.percent}%` : 'not set'}`);
+  for (const [gate, audit] of Object.entries(state.audits ?? {})) {
+    console.log(`audit ${gate} ${audit.verdict} (${audit.checked} checked, sprint ${audit.sprint ?? '?'})`);
+  }
+  for (const [role, record] of Object.entries(state.identity ?? {})) {
+    const expires = record.expiresAt ? record.expiresAt.slice(0, 10) : 'never';
+    console.log(`identity ${role} expires ${expires}`);
+  }
+  const harness = detectHarness(cwd);
+  console.log(`harness gaps: ${harness.missing.length}`);
+
   const blocked = [];
   if (state.escalation) blocked.push('escalation open; run "agile-flow resume --note <resolution>"');
   if (!state.stageBase) blocked.push('no stage base; run "agile-flow next"');
@@ -352,6 +364,27 @@ async function cmdRetro(args, cwd) {
     for (const failure of failures) console.error(`- ${failure}`);
     if (failures.length) return 1;
     console.log('retro actions valid');
+    return 0;
+  }
+  if (sub === 'approve') {
+    const target = flag(args, 'target');
+    const note = flag(args, 'note');
+    if (!target || !note) {
+      console.error('usage: agile-flow retro approve --target <skill> --note <text>');
+      return 1;
+    }
+    if (!(await humanApproved(state))) return 1;
+    const { recordReview } = await import('./reviews.mjs');
+    const nn = String(state.sprint).padStart(2, '0');
+    const evidence = `docs/agile/retro/retro-${nn}.md`;
+    await recordReview(cwd, {
+      gate: `retro-${nn}-process-${target}`,
+      role: 'human',
+      verdict: 'pass',
+      evidence: [evidence],
+      note,
+    });
+    console.log(`approved process change for ${target}`);
     return 0;
   }
   if (sub === 'list') {

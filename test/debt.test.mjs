@@ -88,3 +88,42 @@ test('G2 refuses a plan that skips the debt allocation', async () => {
   await run(['sign', 'G2', '--role', 'human', '--verdict', 'pass', '--evidence', 'docs/agile/plan/sprint-01.md', '--note', 'ok'], dir);
   assert.equal(await run(['check', 'G2'], dir), 1);
 });
+
+test('a plan row must resolve to a story or debt row', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'af-debt-'));
+  execFileSync('git', ['init', '-q'], { cwd: dir });
+  execFileSync('git', ['config', 'user.name', 'test'], { cwd: dir });
+  execFileSync('git', ['config', 'user.email', 'test@local'], { cwd: dir });
+  await writeFile(join(dir, 'package.json'), JSON.stringify({ scripts: { test: 'node --test' } }));
+  execFileSync('git', ['add', '-A'], { cwd: dir });
+  execFileSync('git', ['commit', '-qm', 'init'], { cwd: dir });
+  await run(['init', '--mode', 'greenfield', '--repo', dir, '--debt-percent', '20'], dir);
+  execFileSync('git', ['add', '-A'], { cwd: dir });
+  execFileSync('git', ['commit', '-qm', 'flow'], { cwd: dir });
+
+  const base = join(dir, 'docs/agile');
+  await mkdir(join(base, 'plan'), { recursive: true });
+  await mkdir(join(base, 'stories'), { recursive: true });
+  await mkdir(join(base, 'architecture'), { recursive: true });
+  await writeFile(join(base, 'backlog.md'), '# Backlog\n\n## Backlog\n| 1 | S-001 |\n');
+  await writeFile(join(base, 'architecture/debt.md'), '# Debt\n\n## Debt\n| D-001 | x |\n');
+  await writeFile(join(base, 'stories/S-001.md'), '# S-001');
+  await writeFile(join(base, 'plan/sprint-01.md'), PLAN(20, ['| S-001 | small | no |', '| D-999 | small | yes |']));
+
+  const state = JSON.parse(await readFile(join(base, 'state.json'), 'utf8'));
+  state.phase = 'planning';
+  state.stageBase = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: dir, encoding: 'utf8' }).trim();
+  state.writeScope = ['docs/agile/**'];
+  await writeFile(join(base, 'state.json'), JSON.stringify(state));
+  await run(['sign', 'G2', '--role', 'human', '--verdict', 'pass', '--evidence', 'docs/agile/plan/sprint-01.md', '--note', 'ok'], dir);
+  const out = await run(['check', 'G2'], dir);
+  assert.equal(out, 1);
+});
+
+test('G3 refuses when planned debt was not completed', async () => {
+  const { checkDebtCompletion } = await import('../src/debt.mjs');
+  const failures = checkDebtCompletion(PLAN(20, ['| S-001 | small | no |', '| S-002 | small | yes |']), {
+    stories: { 'S-001': { dod: 'pass' }, 'S-002': { dod: 'pending' } },
+  });
+  assert.ok(failures.some((f) => /S-002/.test(f)), failures.join('\n'));
+});

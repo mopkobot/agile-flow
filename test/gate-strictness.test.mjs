@@ -97,3 +97,15 @@ test('G1 requires a threat model', async () => {
   const failures = await validateArtifacts(repo, GATE_DEFS.G1.artifacts.filter((a) => a.path === 'architecture/threat-model.md'));
   assert.deepEqual(failures, []);
 });
+
+test('changed-code coverage is measured from per-file rows', async () => {
+  const { changedCoveragePercent } = await import('../src/gates.mjs');
+  const output = [
+    '# file | line % | branch %',
+    '# src/app.mjs | 90.00 | 80.00',
+    '# src/legacy.mjs | 10.00 | 10.00',
+  ].join('\n');
+  assert.equal(changedCoveragePercent(output, ['src/app.mjs']), 90);
+  assert.equal(changedCoveragePercent(output, ['src/app.mjs', 'src/legacy.mjs']), 50);
+  assert.equal(changedCoveragePercent(output, ['src/new.mjs']), null);
+});

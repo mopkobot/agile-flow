@@ -86,7 +86,9 @@ Role sign-offs are authenticated with per-role tokens: the human runs `identity 
 
 Human sign-offs are authenticated with a passphrase hashed at `init` or `setup-human`. Set `AGILE_HUMAN_PASSPHRASE` for that command, or run it in an interactive terminal. An agent shell without the passphrase cannot sign as the human.
 
-Coverage: a command that enforces its own threshold (`--check-coverage`, `--cov-fail-under`, `--fail-under`) is trusted on exit code; otherwise the line coverage it reports must reach 80%. Point the command at changed-code coverage when the tool supports it.
+`status` also reports the debt allocation, audit freshness, token expiry per role, and harness gaps.
+
+Coverage: changed code is measured from per-file rows when the coverage report exposes them, falling back to whole-project line coverage. A command that enforces its own threshold (`--check-coverage`, `--cov-fail-under`, `--fail-under`) is trusted on exit code; otherwise the line coverage it reports must reach 80%. Point the command at changed-code coverage when the tool supports it.
 
 ## Rules the flow enforces
 
@@ -120,20 +122,21 @@ docs/plans/              implementation plan
 
 ## Tech debt allocation
 
-At intake the operator sets a standing percentage of each sprint for technical debt. It is stored in state and enforced at G2: the sprint plan must declare the same percentage and include weighted debt work that meets it (`small` 1, `medium` 2, `large` 3). Plans that spend the sprint entirely on features are refused.
+At intake the operator sets a standing percentage of each sprint for technical debt. It is stored in state and enforced at G2: the sprint plan must declare the same percentage and include weighted debt work that meets it (`small` 1, `medium` 2, `large` 3). Plans that spend the sprint entirely on features are refused, plan rows must resolve to a real story or debt row, and G3 refuses when planned debt was not actually completed.
 
 ## Retro loop
 
 A retro is not a meeting summary. Each action is typed and targeted, and `advance` refuses to leave retro until every action points at something real:
 
-- `process` targets a skill. On approval the skill file is edited; because installed skills are symlinks into this repo, the change takes effect immediately.
+- `process` targets a skill. On approval the skill file is edited; because installed skills are symlinks into this repo, the change takes effect immediately. The human records the approval with `retro approve`; without it the sprint cannot close.
 - `product` targets a backlog card. The PO adds the row, BA shapes the story, and `tracker sync` opens the issue.
 - `debt` targets a debt-register row owned by the tech lead.
 - `dropped` keeps a written reason.
 
 ```bash
 agile-flow retro list    # what the retro committed to
-agile-flow retro check   # validates targets before the next sprint
+agile-flow retro check   # validates targets and approvals before the next sprint
+agile-flow retro approve --target <agile-skill> --note "<what you approved>"  # human-only
 ```
 
 ## Design constraints

@@ -89,6 +89,7 @@ put "$A/backlog.md" <<'EOF'
 | rank | id | title | persona | value | risk | size hint | state |
 |---|---|---|---|---|---|---|---|
 | 1 | S-001 | greet by name | visitor | high | low | small | ready |
+| 2 | S-002 | farewell | visitor | medium | low | small | idea |
 EOF
 sign G0 po docs/agile/vision.md
 sign G0 human docs/agile/vision.md --note "operator approved scope"
@@ -464,6 +465,7 @@ put "$A/retro/retro-01.md" <<'EOF'
 | Harden the greeting limit | product | S-001 | po | sprint 02 |
 | Retire hand-rolled routing | debt | D-001 | tech-lead | sprint 03 |
 EOF
+flow retro approve --target agile-sre --note "diff reviewed, skills validated, tests green"
 commit "docs: close retro 01"
 
 say "verify"

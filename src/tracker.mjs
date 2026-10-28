@@ -72,7 +72,7 @@ export async function syncGitHub(root, { dryRun = false, env = process.env, prin
     const stale = Object.entries(STATUS_LABELS)
       .filter(([key]) => key !== status)
       .flatMap(([, value]) => ['--remove-label', value]);
-    run(['issue', 'edit', String(issue ?? '<number>'), ...stale, '--add-label', label]);
+    run(['issue', 'edit', String(issue ?? '<number>'), ...stale, '--add-label', label, '--body-file', storyPath]);
 
     if (!dryRun) {
       state.stories[id].issue = issue;

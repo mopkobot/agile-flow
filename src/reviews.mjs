@@ -49,7 +49,7 @@ async function assertEvidence(root, evidence) {
 }
 
 export async function recordReview(root, { gate, role, verdict, evidence, note, agent = null }) {
-  if (!GATES.includes(gate) && !/^DoR-[A-Za-z0-9._-]+$/.test(gate)) {
+  if (!GATES.includes(gate) && !/^DoR-[A-Za-z0-9._-]+$/.test(gate) && !/^retro-\d+-process-[A-Za-z0-9._-]+$/.test(gate)) {
     throw new ReviewError(`unknown gate: ${gate}`);
   }
   if (!ROLES.includes(role)) throw new ReviewError(`unknown role: ${role}`);

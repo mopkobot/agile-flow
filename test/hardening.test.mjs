@@ -82,6 +82,7 @@ test('advance at retro starts the next sprint at shaping', async () => {
     join(repo, 'docs/agile/retro/retro-01.md'),
     '# Retro\n\n## Actions\n\n| action | type | target | owner | due |\n|---|---|---|---|---|\n| tighten review | process | agile-tech-lead | tech-lead | sprint 02 |\n',
   );
+  assert.equal(await run(['retro', 'approve', '--target', 'agile-tech-lead', '--note', 'reviewed'], repo), 0);
   assert.equal(await run(['advance'], repo), 0);
   const next = JSON.parse(await readFile(statePath, 'utf8'));
   assert.equal(next.phase, 'shaping');
