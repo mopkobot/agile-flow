@@ -124,9 +124,19 @@ intake -> discovery [G0] -> shaping -> ux -> architecture [G1] -> planning [G2]
 
 Brownfield: discovery also produces `architecture/legacy-assessment.md` before G0 closes.
 
-### 8. Escalate, do not improvise
+### 8. Guard irreversible actions
 
-Stop and write the escalation through the CLI when: the same gate fails twice; a required input is missing (repo path, credentials, product decision, legal or licensing question); the next step is irreversible or destructive (force-push, data migration, production deploy, secret rotation); an executable check cannot run and no human waiver exists; a security finding appears; or a role would have to fabricate an artifact to satisfy a gate.
+Before any push, force-push, deploy, migration, secret rotation, or data deletion, run:
+
+```
+node bin/agile-flow.mjs guard <action> --question "<what is irreversible and what approval you need>"
+```
+
+Exit 1 means blocked: put the question to the operator and stop. Never treat the command's own refusal as permission to proceed another way.
+
+### 9. Escalate, do not improvise
+
+Stop and write the escalation through the CLI when: the same gate fails twice; an irreversible action was blocked by `guard`; a required input is missing (repo path, credentials, product decision, legal or licensing question); the next step is irreversible or destructive (force-push, data migration, production deploy, secret rotation); an executable check cannot run and no human waiver exists; a security finding appears; or a role would have to fabricate an artifact to satisfy a gate.
 
 State the question in one sentence, name the blocked phase, and wait.
 

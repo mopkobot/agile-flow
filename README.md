@@ -57,6 +57,7 @@ agile-flow init --mode greenfield|brownfield --repo <path>
 agile-flow status
 agile-flow next
 agile-flow advance [--phase <phase>]
+agile-flow guard <push|force-push|deploy|migrate|rotate-secret|delete-data> --question <text>
 agile-flow check <gate>
 agile-flow sign <gate> --role <role> --verdict pass|fail|pass-with-risk --evidence <paths>
 agile-flow waive <gate> [--requirement <text>] --reason <text> --expires YYYY-MM-DD --approver human
@@ -65,6 +66,8 @@ agile-flow skills
 ```
 
 Exit codes: `0` ok, `1` failure, `2` already initialized, `3` blocked.
+
+Coverage: a command that enforces its own threshold (`--check-coverage`, `--cov-fail-under`, `--fail-under`) is trusted on exit code; otherwise the line coverage it reports must reach 80%. Point the command at changed-code coverage when the tool supports it.
 
 ## Rules the flow enforces
 

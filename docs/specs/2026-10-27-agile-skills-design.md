@@ -299,6 +299,7 @@ Human-signed only. A waiver names the gate, the requirement waived, the reason, 
 | `advance [--phase <phase>]` | Revalidates the current gate, then moves to the next phase; at retro it increments the sprint and returns to shaping | 0, 1 if the gate no longer verifies or a phase boundary was violated |
 | `sign <gate> --role <role> --verdict <v> --evidence <paths>` | Writes a review record after validating role and evidence | 0, 1 invalid |
 | `waive <gate> --reason <text> --expires <date> --approver human` | Records a human waiver | 0, 1 if approver is not human |
+| `guard <action> --question <text>` | Records a destructive-action escalation and exits blocked | 0 never, 1 blocked |
 | `resume` | Clears an escalation only when the human supplies a resolution note | 0, 1 |
 
 The CLI never edits product code and never commits.
@@ -357,7 +358,7 @@ Escalation is a stop, not a question answered by guessing. `resume` requires a h
 
 Ready: story template complete, four shaping sign-offs, wireframe attached, no blocking open question, slice size small or medium.
 
-Done: AC verified by test, changed-code coverage ≥ 80%, lint clean, no new vulnerabilities, docs updated, observability hooks present, mockups honored, no unowned technical debt added, CI green on trunk.
+Done: AC verified by test, changed-code coverage ≥ 80% (enforced by the tool's own threshold flag, or by reported line coverage when no threshold flag is present), lint clean, no new vulnerabilities, docs updated, observability hooks present, mockups honored, no unowned technical debt added, CI green on trunk.
 
 ## 12. Practice enforcement map
 

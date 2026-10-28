@@ -198,6 +198,13 @@ export async function validateTddEvidence(root) {
     const text = await readFile(join(agileDir(root), rel), 'utf8');
     const body = sectionBody(text, '## Verdict');
     if (!/^pass\b/i.test(body)) failures.push(`review verdict is not pass: docs/agile/${rel}`);
+    const reviewer = text.match(/^reviewer:\s*(\S+)/m)?.[1];
+    const implementer = text.match(/^implementer:\s*(\S+)/m)?.[1];
+    if (!reviewer) failures.push(`review names no reviewer: docs/agile/${rel}`);
+    if (!implementer) failures.push(`review names no implementer: docs/agile/${rel}`);
+    if (reviewer && implementer && reviewer === implementer) {
+      failures.push(`reviewer and implementer are the same agent: docs/agile/${rel}`);
+    }
   }
   return failures;
 }
@@ -219,9 +226,13 @@ export async function runChecks(root, profile, names = ['test', 'coverage', 'lin
     }
     const result = await runCommand(root, command);
     if (result.ok && name === 'coverage') {
+      if (/--check-coverage|--cov-fail-under|--fail-under/.test(command)) {
+        results.push({ name, ok: true, detail: `threshold enforced by the command: ${command}` });
+        continue;
+      }
       const percent = coveragePercent(result.output ?? '');
       if (percent === null) {
-        results.push({ name, ok: false, detail: `coverage command reported no percentage: ${command} :: ${(result.output ?? '').slice(-300)}` });
+        results.push({ name, ok: false, detail: `coverage command reported no percentage and enforces no threshold: ${command} :: ${(result.output ?? '').slice(-300)}` });
         continue;
       }
       if (percent < 80) {

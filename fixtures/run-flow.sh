@@ -298,6 +298,9 @@ put "$A/build/S-001/review.md" <<'EOF'
 ## Verdict
 pass
 
+reviewer: reviewer-spawn
+implementer: implementer-spawn
+
 - Each criterion has a failing-first test.
 - No duplicated rule.
 - No new dependency.

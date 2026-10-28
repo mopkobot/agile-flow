@@ -41,6 +41,8 @@ export async function run(argv, cwd = process.cwd()) {
         return cmdSkills(cwd, rest);
       case 'advance':
         return await cmdAdvance(rest, cwd);
+      case 'guard':
+        return await cmdGuard(rest, cwd);
       default:
         return usage();
     }
@@ -210,6 +212,33 @@ async function cmdWaive(args, cwd) {
   }
 }
 
+const GUARDED_ACTIONS = ['push', 'force-push', 'deploy', 'migrate', 'rotate-secret', 'delete-data'];
+
+async function cmdGuard(args, cwd) {
+  const action = args[0];
+  const question = flag(args, 'question');
+  if (!GUARDED_ACTIONS.includes(action)) {
+    console.error(`error: guard action must be one of: ${GUARDED_ACTIONS.join(', ')}`);
+    return 1;
+  }
+  if (!question || !question.trim()) {
+    console.error('error: guard requires --question describing the irreversible effect');
+    return 1;
+  }
+  const state = await loadState(cwd);
+  state.escalation = {
+    reason: 'destructive-action',
+    action,
+    question: question.trim(),
+    blockedPhase: state.phase,
+    at: new Date().toISOString(),
+  };
+  await saveState(cwd, state);
+  console.error(`blocked: ${action} needs human approval`);
+  console.error(`question: ${question.trim()}`);
+  return 1;
+}
+
 async function cmdAdvance(args, cwd) {
   const state = await loadState(cwd);
   if (state.escalation) {
@@ -267,7 +296,7 @@ function cmdSkills(cwd, args = []) {
 }
 
 function usage() {
-  console.error('usage: agile-flow <init|status|next|advance|resume|sign|check|waive|skills> [options]');
+  console.error('usage: agile-flow <init|status|next|advance|guard|resume|sign|check|waive|skills> [options]');
   return 1;
 }
 

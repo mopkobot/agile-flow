@@ -87,7 +87,8 @@ You are spawned in one of four modes. Read the mode in the envelope and do only 
 - Each commit leaves the suite green.
 - Commit message states the behavior added, not the file touched.
 - Do not commit generated artifacts, secrets, or local configuration.
-- Do not force-push, rewrite history, or amend a commit that is already on trunk. If history must change, stop and escalate.
+- Do not force-push, rewrite history, or amend a commit that is already on trunk. If history must change, run `node bin/agile-flow.mjs guard force-push --question "<why and what it rewrites>"` and stop when it exits 1.
+- Before a deploy, migration, secret rotation, or data deletion, run `guard <action>` the same way. A blocked guard is an escalation, not a suggestion.
 
 ### Refactor
 
