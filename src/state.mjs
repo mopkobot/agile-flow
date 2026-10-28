@@ -62,6 +62,7 @@ export function freshState(mode) {
     gateRetries: {},
     waivers: [],
     escalation: null,
+    stackDetected: false,
   };
 }
 

@@ -1,5 +1,7 @@
-import { resolve } from 'node:path';
-import { initFlow, loadState, saveState, StateError, GATES } from './state.mjs';
+import { writeFile } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
+import { initFlow, loadState, saveState, StateError, GATES, agileDir } from './state.mjs';
+import { detectStack, renderProfile } from './stack.mjs';
 
 export async function run(argv, cwd = process.cwd()) {
   const [command, ...rest] = argv;
@@ -33,6 +35,14 @@ async function cmdInit(args, cwd) {
   if (!created) {
     console.error(`error: ${state.targetRepo} already initialized`);
     return 2;
+  }
+  const stack = detectStack(root);
+  state.stackDetected = Boolean(stack);
+  await saveState(root, state);
+  if (stack) {
+    await writeFile(join(agileDir(root), 'stack-profile.md'), renderProfile(stack), 'utf8');
+  } else {
+    console.log('stack not detected: ask the operator for the stack and write docs/agile/stack-profile.md before G0');
   }
   console.log(`initialized ${mode} flow at ${root}`);
   return 0;
