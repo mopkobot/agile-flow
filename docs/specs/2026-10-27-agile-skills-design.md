@@ -262,6 +262,7 @@ at: 2026-10-27T10:00:00Z
   "phase": "build",
   "activeRole": "agile-dev",
   "writeScope": ["src/**", "test/**", "docs/agile/build/**"],
+  "stageBase": "<git sha at stage start>",
   "gates": {
     "G0": { "status": "pass", "at": "..." },
     "G1": { "status": "pass", "at": "..." },
@@ -272,6 +273,7 @@ at: 2026-10-27T10:00:00Z
   "stories": {
     "S-001": { "dor": "pass", "dod": "in-progress", "retries": 0 }
   },
+  "gateRetries": { "G3": 1 },
   "waivers": [],
   "escalation": null
 }
