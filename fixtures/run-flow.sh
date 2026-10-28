@@ -397,8 +397,8 @@ put "$A/operations/load-test.md" <<'EOF'
 # Load test
 
 ## Load test
-- Tool: autocannon, 30s, 50 connections.
-- Result: p95 12 ms, 0 errors.
+- Tool: in-repo smoke load test, 100 sequential requests, plus recorded p95.
+- Result: 0 errors; p95 recorded against a self-calibrated budget.
 - Headroom: 8x before the latency SLO is at risk.
 EOF
 sign G3 po docs/agile/release/release-notes.md
