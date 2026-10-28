@@ -99,8 +99,16 @@ docs/plans/              implementation plan
 
 ```bash
 node --test
-bash fixtures/run-flow.sh /tmp/greenfield-copy sample-app
-bash fixtures/run-flow.sh /tmp/brownfield-copy brownfield
+
+# greenfield
+cp -R fixtures/sample-app /tmp/af-green && cd /tmp/af-green
+git init -q && git add -A && git commit -qm init
+bash /path/to/agile-flow/fixtures/run-flow.sh /tmp/af-green
+
+# brownfield
+cp -R fixtures/legacy-app /tmp/af-brown && cd /tmp/af-brown
+git init -q && git add -A && git commit -qm init
+bash /path/to/agile-flow/fixtures/run-flow.sh /tmp/af-brown brownfield
 ```
 
 The brownfield run must surface the duplicated name-length rule in `docs/agile/architecture/legacy-assessment.md` before any story is built.
