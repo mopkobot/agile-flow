@@ -5,6 +5,7 @@ import { agileDir, loadState, saveState } from './state.mjs';
 import { globToRegExp, ROLE_SCOPE, checkBoundary } from './boundary.mjs';
 import { parseProfile } from './stack.mjs';
 import { validateReviews } from './reviews.mjs';
+import { activeWaivers, waiverCovers } from './waivers.mjs';
 
 const md = (path, headings) => ({ path, headings });
 
@@ -189,7 +190,8 @@ export async function checkGate(root, gate) {
     const role = roleForArtifact(artifact.path.replace(/\*.*$/, ''));
     if (role) authors[`docs/agile/${artifact.path}`] = role;
   }
-  const reviews = await validateReviews(root, gate, def.roles, authors);
+  const waivers = activeWaivers(state);
+  const reviews = await validateReviews(root, gate, def.roles, authors, waivers);
   failures.push(...reviews.failures);
 
   const boundary = await checkBoundary(root, state.writeScope, state.stageBase);
@@ -197,7 +199,10 @@ export async function checkGate(root, gate) {
     failures.push(boundary.reason ?? `boundary violation: ${boundary.violations.join(', ')}`);
   }
 
-  if (failures.length > 0) {
+  const waived = failures.filter((f) => waiverCovers(waivers, gate, f));
+  const blocking = failures.filter((f) => !waiverCovers(waivers, gate, f));
+
+  if (blocking.length > 0) {
     state.gateRetries[gate] = (state.gateRetries[gate] ?? 0) + 1;
     if (state.gateRetries[gate] >= 2 && !state.escalation) {
       state.escalation = {
@@ -208,11 +213,11 @@ export async function checkGate(root, gate) {
       };
     }
     await saveState(root, state);
-    return { ok: false, failures };
+    return { ok: false, failures: blocking };
   }
 
   state.gates[gate] = { status: 'pass', at: new Date().toISOString() };
   state.gateRetries[gate] = 0;
   await saveState(root, state);
-  return { ok: true, failures: [] };
+  return { ok: true, failures: [], waived };
 }

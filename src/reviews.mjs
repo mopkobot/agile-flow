@@ -103,7 +103,7 @@ export async function readReviews(root, gate) {
   return out;
 }
 
-export async function validateReviews(root, gate, requiredRoles, artifactAuthors = {}) {
+export async function validateReviews(root, gate, requiredRoles, artifactAuthors = {}, waivers = []) {
   const failures = [];
   const records = await readReviews(root, gate);
   const byRole = new Map(records.map((r) => [r.role, r]));
@@ -115,7 +115,9 @@ export async function validateReviews(root, gate, requiredRoles, artifactAuthors
       continue;
     }
     if (record.verdict === 'fail') failures.push(`sign-off failed: ${role}`);
-    if (record.verdict === 'pass-with-risk') failures.push(`pass-with-risk without waiver: ${role}`);
+    if (record.verdict === 'pass-with-risk' && !waivers.some((w) => w.gate === gate)) {
+      failures.push(`pass-with-risk without waiver: ${role}`);
+    }
     for (const rel of record.evidence) {
       try {
         await access(join(root, rel));

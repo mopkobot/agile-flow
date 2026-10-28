@@ -6,6 +6,7 @@ import { nextAction } from './phases.mjs';
 import { recordReview, ReviewError } from './reviews.mjs';
 import { ROLE_SCOPE } from './boundary.mjs';
 import { checkGate } from './gates.mjs';
+import { addWaiver, WaiverError } from './waivers.mjs';
 import { execFileSync } from 'node:child_process';
 
 function headSha(cwd) {
@@ -32,6 +33,8 @@ export async function run(argv, cwd = process.cwd()) {
         return await cmdSign(rest, cwd);
       case 'check':
         return await cmdCheck(rest, cwd);
+      case 'waive':
+        return await cmdWaive(rest, cwd);
       default:
         return usage();
     }
@@ -169,8 +172,31 @@ async function cmdCheck(args, cwd) {
   return 1;
 }
 
+async function cmdWaive(args, cwd) {
+  const gate = args[0];
+  const requirement = flag(args, 'requirement') ?? 'gate';
+  const reason = flag(args, 'reason');
+  const expires = flag(args, 'expires');
+  const approver = flag(args, 'approver');
+  if (!gate || !reason || !expires || !approver) {
+    console.error('usage: agile-flow waive <gate> [--requirement <text>] --reason <text> --expires YYYY-MM-DD --approver human');
+    return 1;
+  }
+  try {
+    await addWaiver(cwd, { gate, requirement, reason, expires, approver });
+    console.log(`waived ${gate} (${requirement}) until ${expires}`);
+    return 0;
+  } catch (err) {
+    if (err instanceof WaiverError) {
+      console.error(`error: ${err.message}`);
+      return 1;
+    }
+    throw err;
+  }
+}
+
 function usage() {
-  console.error('usage: agile-flow <init|status|next|resume|sign|check> [options]');
+  console.error('usage: agile-flow <init|status|next|resume|sign|check|waive> [options]');
   return 1;
 }
 
