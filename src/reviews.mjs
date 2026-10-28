@@ -1,6 +1,6 @@
 import { access, mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { agileDir } from './state.mjs';
+import { agileDir, GATES } from './state.mjs';
 
 export const ROLES = [
   'po',
@@ -37,6 +37,9 @@ async function assertEvidence(root, evidence) {
     throw new ReviewError('at least one --evidence path is required');
   }
   for (const rel of evidence) {
+    if (!rel.startsWith('docs/agile/')) {
+      throw new ReviewError(`evidence must live under docs/agile/: ${rel}`);
+    }
     try {
       await access(join(root, rel));
     } catch {
@@ -45,7 +48,8 @@ async function assertEvidence(root, evidence) {
   }
 }
 
-export async function recordReview(root, { gate, role, verdict, evidence }) {
+export async function recordReview(root, { gate, role, verdict, evidence, note }) {
+  if (!GATES.includes(gate)) throw new ReviewError(`unknown gate: ${gate}`);
   if (!ROLES.includes(role)) throw new ReviewError(`unknown role: ${role}`);
   if (!VERDICTS.includes(verdict)) throw new ReviewError(`unknown verdict: ${verdict}`);
   await assertEvidence(root, evidence);
@@ -57,6 +61,7 @@ export async function recordReview(root, { gate, role, verdict, evidence }) {
     'evidence:',
     ...evidence.map((e) => `  - ${e}`),
     'open_risks: []',
+    ...(note ? [`note: ${note}`] : []),
     `at: ${new Date().toISOString()}`,
     '',
   ].join('\n');
@@ -115,10 +120,22 @@ export async function validateReviews(root, gate, requiredRoles, artifactAuthors
       continue;
     }
     if (record.verdict === 'fail') failures.push(`sign-off failed: ${role}`);
-    if (record.verdict === 'pass-with-risk' && !waivers.some((w) => w.gate === gate)) {
-      failures.push(`pass-with-risk without waiver: ${role}`);
+    if (record.verdict === 'pass-with-risk') {
+      const specific = waivers.some((w) => {
+        if (w.gate !== gate) return false;
+        const requirement = (w.requirement ?? '').toLowerCase();
+        return requirement.includes('risk') || requirement.includes(role);
+      });
+      if (!specific) failures.push(`pass-with-risk without a specific waiver: ${role}`);
+    }
+    if (role === 'human' && !record.note) {
+      failures.push('human sign-off missing note: record the resolution the human supplied');
     }
     for (const rel of record.evidence) {
+      if (!rel.startsWith('docs/agile/')) {
+        failures.push(`sign-off evidence outside artifact root: ${role} -> ${rel}`);
+        continue;
+      }
       try {
         await access(join(root, rel));
       } catch {

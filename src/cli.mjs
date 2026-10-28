@@ -4,7 +4,7 @@ import { initFlow, loadState, saveState, StateError, GATES, agileDir } from './s
 import { detectStack, renderProfile } from './stack.mjs';
 import { nextAction, nextPhase, PHASES, GATE_AFTER } from './phases.mjs';
 import { recordReview, ReviewError } from './reviews.mjs';
-import { ROLE_SCOPE } from './boundary.mjs';
+import { ROLE_SCOPE, checkBoundary, ignoredPaths } from './boundary.mjs';
 import { checkGate } from './gates.mjs';
 import { addWaiver, WaiverError } from './waivers.mjs';
 import { validateSkillTree } from './skills.mjs';
@@ -105,7 +105,10 @@ async function cmdNext(cwd) {
   const state = await loadState(cwd);
   const action = nextAction(state);
   if (!action.blocked) {
-    if (!state.stageBase || state.activeRole !== action.role) state.stageBase = headSha(cwd);
+    if (!state.stageBase || state.activeRole !== action.role) {
+      state.stageBase = headSha(cwd);
+      state.stageIgnored = ignoredPaths(cwd);
+    }
     state.activeRole = action.role;
     state.writeScope = ROLE_SCOPE[action.role] ?? [];
     await saveState(cwd, state);
@@ -144,13 +147,18 @@ async function cmdSign(args, cwd) {
   const role = flag(args, 'role');
   const verdict = flag(args, 'verdict');
   const evidence = flag(args, 'evidence');
+  const note = flag(args, 'note');
+  if (role === 'human' && !note) {
+    console.error('error: a human sign-off requires --note with the decision the human supplied');
+    return 1;
+  }
   if (!gate || !role || !verdict || !evidence) {
     console.error('usage: agile-flow sign <gate> --role <role> --verdict <pass|fail|pass-with-risk> --evidence <path[,path]>');
     return 1;
   }
   const paths = evidence.split(',').map((p) => p.trim()).filter(Boolean);
   try {
-    const path = await recordReview(cwd, { gate, role, verdict, evidence: paths });
+    const path = await recordReview(cwd, { gate, role, verdict, evidence: paths, note });
     console.log(`signed ${gate} as ${role}: ${path}`);
     return 0;
   } catch (err) {
@@ -171,6 +179,7 @@ async function cmdCheck(args, cwd) {
   const result = await checkGate(cwd, gate);
   if (result.ok) {
     console.log(`${gate} pass`);
+    for (const waived of result.waived ?? []) console.log(`waived: ${waived}`);
     return 0;
   }
   console.error(`${gate} fail`);
@@ -208,14 +217,35 @@ async function cmdAdvance(args, cwd) {
     return 1;
   }
   const gate = GATE_AFTER[state.phase];
-  if (gate && state.gates[gate]?.status !== 'pass') {
-    console.error(`error: ${gate} has not passed; cannot leave ${state.phase}`);
-    return 1;
+  if (gate) {
+    if (state.gates[gate]?.status !== 'pass') {
+      console.error(`error: ${gate} has not passed; cannot leave ${state.phase}`);
+      return 1;
+    }
+    const revalidated = await checkGate(cwd, gate);
+    if (!revalidated.ok) {
+      console.error(`error: ${gate} no longer verifies; cannot leave ${state.phase}`);
+      for (const failure of revalidated.failures) console.error(`- ${failure}`);
+      return 1;
+    }
+  } else if (state.stageBase) {
+    const allowed = [...(state.writeScope ?? []), ...ROLE_SCOPE['agile-flow'], ...ROLE_SCOPE.human];
+    const boundary = await checkBoundary(cwd, allowed, state.stageBase, state.stageIgnored ?? []);
+    if (!boundary.ok) {
+      console.error('error: phase boundary violated');
+      if (boundary.reason) console.error(`- ${boundary.reason}`);
+      for (const violation of boundary.violations ?? []) console.error(`- ${violation}`);
+      return 1;
+    }
   }
-  const target = flag(args, 'phase') ?? nextPhase(state.phase);
+
+  const target = state.phase === 'retro' ? 'shaping' : flag(args, 'phase') ?? nextPhase(state.phase);
   if (!target) {
     console.error('error: already at the final phase');
     return 1;
+  }
+  if (state.phase === 'retro') {
+    state.sprint += 1;
   }
   if (!PHASES.includes(target)) {
     console.error(`error: unknown phase: ${target}`);

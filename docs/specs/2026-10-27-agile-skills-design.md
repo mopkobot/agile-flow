@@ -101,7 +101,7 @@ Roles do not cross their defined boundary. A role that finds work outside its sc
 Rules:
 
 1. **Write scope.** Each role writes only to its owned paths. Any write outside that set is a boundary violation and fails the stage.
-2. **No self-approval.** A sign-off may not be issued by the role that authored the artifact under review.
+2. **No self-approval of another role's work.** A role signs its own domain artifacts as an attestation, but may not review and sign off work authored by a different role, and never its own implementation. Reviewer independence is enforced inside the build loop: the reviewer spawn must differ from the implementer spawn.
 3. **No silent substitution.** A role may not perform another role's activity even when it believes it can do it better or the owning role is unavailable.
 4. **No scope expansion.** A role may not add requirements, change priorities, or widen the increment.
 5. **Handoff, not takeover.** Missing input from another role is escalated or requested, never invented.
@@ -246,6 +246,7 @@ evidence:
   - docs/agile/operations/slos.md
   - docs/agile/operations/load-test.md
 open_risks: []
+note: <required for human sign-offs: the decision the human supplied>
 at: 2026-10-27T10:00:00Z
 ```
 
@@ -294,7 +295,8 @@ Human-signed only. A waiver names the gate, the requirement waived, the reason, 
 | `init --repo <path> --mode greenfield\|brownfield` | Creates `docs/agile/`, state file, stack profile | 0, 2 if already initialized |
 | `status` | Prints phase, gate states, blocked reasons, open waivers, escalation | 0 |
 | `next` | Prints the next action, the skill to spawn, and required inputs | 0, 3 if blocked |
-| `check <gate>` | Runs structural, executable, sign-off, and boundary validation: no write outside `writeScope`, no self-approval | 0 pass, 1 fail with reasons |
+| `check <gate>` | Runs structural, executable, sign-off, and boundary validation: no write outside `writeScope`, no self-approval, gate reachable from the current phase | 0 pass, 1 fail with reasons |
+| `advance [--phase <phase>]` | Revalidates the current gate, then moves to the next phase; at retro it increments the sprint and returns to shaping | 0, 1 if the gate no longer verifies or a phase boundary was violated |
 | `sign <gate> --role <role> --verdict <v> --evidence <paths>` | Writes a review record after validating role and evidence | 0, 1 invalid |
 | `waive <gate> --reason <text> --expires <date> --approver human` | Records a human waiver | 0, 1 if approver is not human |
 | `resume` | Clears an escalation only when the human supplies a resolution note | 0, 1 |

@@ -54,7 +54,7 @@ async function completeG0(repo) {
   await writeArtifact(repo, 'success-metrics.md', '# Metrics\n\n## Metrics\nm\n');
   await writeArtifact(repo, 'backlog.md', '# Backlog\n\n## Backlog\nb\n');
   assert.equal(await run(['sign', 'G0', '--role', 'po', '--verdict', 'pass', '--evidence', 'docs/agile/vision.md'], repo), 0);
-  assert.equal(await run(['sign', 'G0', '--role', 'human', '--verdict', 'pass', '--evidence', 'docs/agile/vision.md'], repo), 0);
+  assert.equal(await run(['sign', 'G0', '--role', 'human', '--verdict', 'pass', '--evidence', 'docs/agile/vision.md', '--note', 'approved by operator'], repo), 0);
 }
 
 test('G0 fails on a missing artifact and passes when complete', async () => {

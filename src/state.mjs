@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 export const STATE_PATH = 'docs/agile/state.json';
@@ -37,6 +37,12 @@ export async function loadState(root) {
   if (state.version !== 1 || !state.phase || !state.gates) {
     throw new StateError(`${STATE_PATH} is missing required fields; refusing to continue`);
   }
+  for (const gate of GATES) {
+    if (!state.gates[gate]) throw new StateError(`${STATE_PATH} is missing ${gate}; refusing to continue`);
+  }
+  if (typeof state.gateRetries !== 'object' || state.gateRetries === null) {
+    throw new StateError(`${STATE_PATH} is missing gateRetries; refusing to continue`);
+  }
   return state;
 }
 
@@ -57,6 +63,7 @@ export function freshState(mode) {
     activeRole: 'agile-flow',
     writeScope: [],
     stageBase: null,
+    stageIgnored: [],
     gates,
     stories: {},
     gateRetries: {},
@@ -69,6 +76,10 @@ export function freshState(mode) {
 export async function initFlow(root, mode) {
   if (mode !== 'greenfield' && mode !== 'brownfield') {
     throw new StateError('--mode must be greenfield or brownfield');
+  }
+  const existing = await readdir(agileDir(root)).catch(() => []);
+  if (existing.length > 0 && !existing.includes('state.json')) {
+    throw new StateError('docs/agile holds artifacts but no state.json; refusing to erase gate history');
   }
   try {
     await loadState(root);

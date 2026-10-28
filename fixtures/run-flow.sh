@@ -15,7 +15,7 @@ say() { printf '\n== %s ==\n' "$1"; }
 flow() { node "$CLI" "$@"; }
 commit() { git add -A && git commit -qm "$1" >/dev/null; }
 put() { mkdir -p "$(dirname "$1")"; cat > "$1"; }
-sign() { flow sign "$1" --role "$2" --verdict pass --evidence "$3" >/dev/null; }
+sign() { gate="$1"; role="$2"; ev="$3"; shift 3; flow sign "$gate" --role "$role" --verdict pass --evidence "$ev" "$@" >/dev/null; }
 
 say "init"
 flow init --mode "$MODE" --repo . >/dev/null
@@ -82,7 +82,7 @@ put "$A/backlog.md" <<'EOF'
 | 1 | S-001 | greet by name | visitor | high | low | small | ready |
 EOF
 sign G0 po docs/agile/vision.md
-sign G0 human docs/agile/vision.md
+sign G0 human docs/agile/vision.md --note "operator approved scope"
 flow check G0
 commit "docs: close G0 scope"
 flow advance >/dev/null
@@ -240,7 +240,7 @@ EOF
 sign G1 architect docs/agile/architecture/system.md
 sign G1 tech-lead docs/agile/architecture/debt.md
 sign G1 ux docs/agile/ux/flows.md
-sign G1 human docs/agile/architecture/adrs/0001-node-http.md
+sign G1 human docs/agile/architecture/adrs/0001-node-http.md --note "operator approved design"
 flow check G1
 commit "docs: close G1 design"
 flow advance >/dev/null
@@ -263,7 +263,7 @@ Ship S-001 and verify the greeting path.
 - Valid name returns a greeting.
 - Empty name returns 400.
 EOF
-sign G2 human docs/agile/plan/sprint-01.md
+sign G2 human docs/agile/plan/sprint-01.md --note "operator approved sprint"
 flow check G2
 commit "docs: close G2 plan"
 flow advance >/dev/null
@@ -365,7 +365,7 @@ sign G3 po docs/agile/release/release-notes.md
 sign G3 tech-lead docs/agile/build/S-001/review.md
 sign G3 architect docs/agile/architecture/nfrs.md
 sign G3 sre docs/agile/operations/slos.md,docs/agile/operations/load-test.md
-sign G3 human docs/agile/quality/test-strategy.md
+sign G3 human docs/agile/quality/test-strategy.md --note "operator approved release"
 flow check G3
 commit "docs: close G3 release"
 flow advance >/dev/null

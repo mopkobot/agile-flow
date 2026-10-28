@@ -37,7 +37,7 @@ async function scopeArtifacts(repo, { backlog = true } = {}) {
   await writeArtifact(repo, 'success-metrics.md', '# Metrics\n\n## Metrics\nm\n');
   if (backlog) await writeArtifact(repo, 'backlog.md', '# Backlog\n\n## Backlog\nb\n');
   await run(['sign', 'G0', '--role', 'po', '--verdict', 'pass', '--evidence', 'docs/agile/vision.md'], repo);
-  await run(['sign', 'G0', '--role', 'human', '--verdict', 'pass', '--evidence', 'docs/agile/vision.md'], repo);
+  await run(['sign', 'G0', '--role', 'human', '--verdict', 'pass', '--evidence', 'docs/agile/vision.md', '--note', 'approved by operator'], repo);
 }
 
 test('boundary violation blocks the stage', async () => {
@@ -65,7 +65,6 @@ test('an active waiver opens the gate and an expired one closes it', async () =>
 
   const statePath = join(repo, 'docs/agile/state.json');
   const state = JSON.parse(await readFile(statePath, 'utf8'));
-  state.gates.G0.status = 'locked';
   state.waivers[0].expires = '2020-01-01';
   await writeFile(statePath, JSON.stringify(state));
   assert.equal(await run(['check', 'G0'], repo), 1);

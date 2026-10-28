@@ -1,7 +1,7 @@
 import { accessSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-const SECRET_SCAN = `! git grep -qEI 'AKIA[0-9A-Z]{16}|BEGIN (RSA |OPENSSH )?PRIVATE KEY' -- .`;
+const SECRET_SCAN = `git rev-parse --git-dir >/dev/null 2>&1 || exit 1; ! git grep -qEI 'AKIA[0-9A-Z]{16}|BEGIN (RSA |OPENSSH )?PRIVATE KEY' -- .`;
 
 const DETECTORS = [
   {
@@ -15,6 +15,8 @@ const DETECTORS = [
         coverage: s.coverage ? 'npm run coverage' : null,
         lint: s.lint ? 'npm run lint' : null,
         build: s.build ? 'npm run build' : null,
+        load: s.load ? 'npm run load' : null,
+        a11y: s.a11y ? 'npm run a11y' : null,
       };
     },
   },
@@ -77,8 +79,8 @@ export function detectStack(root) {
       lint: commands.lint ?? null,
       build: commands.build ?? null,
       secretScan: SECRET_SCAN,
-      a11y: null,
-      load: null,
+      a11y: commands.a11y ?? null,
+      load: commands.load ?? null,
     };
   }
   return null;

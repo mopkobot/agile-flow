@@ -6,6 +6,13 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { run } from '../src/cli.mjs';
 
+function cleanEnv() {
+  const env = { ...process.env };
+  delete env.NODE_TEST_CONTEXT;
+  delete env.NODE_OPTIONS;
+  return env;
+}
+
 async function copyFixture(name = 'sample-app') {
   const repo = await mkdtemp(join(tmpdir(), 'af-fixture-'));
   await cp(join(import.meta.dirname, '..', 'fixtures', name), repo, { recursive: true });
@@ -46,7 +53,7 @@ test('G0 refuses without artifacts and opens when complete', async () => {
   assert.equal(await run(['next'], repo), 0);
   await minimalG0(repo);
   assert.equal(await run(['sign', 'G0', '--role', 'po', '--verdict', 'pass', '--evidence', 'docs/agile/vision.md'], repo), 0);
-  assert.equal(await run(['sign', 'G0', '--role', 'human', '--verdict', 'pass', '--evidence', 'docs/agile/vision.md'], repo), 0);
+  assert.equal(await run(['sign', 'G0', '--role', 'human', '--verdict', 'pass', '--evidence', 'docs/agile/vision.md', '--note', 'approved by operator'], repo), 0);
   assert.equal(await run(['check', 'G0'], repo), 0);
 });
 
@@ -58,7 +65,7 @@ test('the fixture app test suite passes', async () => {
 test('the full flow reaches retro with every gate passed', async () => {
   const repo = await copyFixture();
   const script = join(import.meta.dirname, '..', 'fixtures', 'run-flow.sh');
-  execFileSync('bash', [script, repo], { cwd: repo, stdio: 'ignore', timeout: 120_000 });
+  execFileSync('bash', [script, repo], { cwd: repo, stdio: 'pipe', env: cleanEnv(), timeout: 300_000 });
   const state = JSON.parse(await readFile(join(repo, 'docs/agile/state.json'), 'utf8'));
   assert.equal(state.phase, 'retro');
   for (const gate of ['G0', 'G1', 'G2', 'G3', 'G4']) assert.equal(state.gates[gate].status, 'pass', gate);
@@ -67,7 +74,7 @@ test('the full flow reaches retro with every gate passed', async () => {
 test('the brownfield flow records a legacy assessment before build', async () => {
   const repo = await copyFixture('legacy-app');
   const script = join(import.meta.dirname, '..', 'fixtures', 'run-flow.sh');
-  execFileSync('bash', [script, repo, 'brownfield'], { cwd: repo, stdio: 'ignore', timeout: 120_000 });
+  execFileSync('bash', [script, repo, 'brownfield'], { cwd: repo, stdio: 'pipe', env: cleanEnv(), timeout: 300_000 });
   const assessment = await readFile(join(repo, 'docs/agile/architecture/legacy-assessment.md'), 'utf8');
   assert.match(assessment, /Duplicated rules/);
   const state = JSON.parse(await readFile(join(repo, 'docs/agile/state.json'), 'utf8'));

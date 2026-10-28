@@ -11,14 +11,17 @@ export class WaiverError extends Error {
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-export async function addWaiver(root, { gate, requirement = 'gate', reason, expires, approver }) {
+export async function addWaiver(root, { gate, requirement, reason, expires, approver }) {
   if (approver !== 'human') throw new WaiverError('only a human may sign a waiver');
   if (!gate) throw new WaiverError('waiver requires a gate');
+  if (!requirement || !requirement.trim() || requirement.trim().toLowerCase() === 'gate') {
+    throw new WaiverError('waiver requires a concrete --requirement; blanket waivers are not allowed');
+  }
   if (!reason || !reason.trim()) throw new WaiverError('waiver requires a reason');
   if (!DATE.test(expires ?? '')) throw new WaiverError('waiver requires --expires YYYY-MM-DD');
   const waiver = {
     gate,
-    requirement: requirement ?? 'gate',
+    requirement: requirement.trim(),
     reason: reason.trim(),
     expires,
     approver: 'human',
@@ -41,7 +44,10 @@ export function activeWaivers(state, now = new Date()) {
 
 export function waiverCovers(waivers, gate, failure) {
   const text = failure.toLowerCase();
-  return waivers.some(
-    (w) => w.gate === gate && (w.requirement === 'gate' || text.includes(w.requirement.toLowerCase())),
-  );
+  return waivers.some((w) => {
+    if (w.gate !== gate) return false;
+    const requirement = (w.requirement ?? '').trim().toLowerCase();
+    if (!requirement || requirement === 'gate') return false;
+    return text.includes(requirement);
+  });
 }

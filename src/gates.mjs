@@ -43,6 +43,8 @@ export const GATE_DEFS = {
       md('quality/test-strategy.md', ['## Strategy']),
       md('release/readiness.md', ['## Readiness']),
       md('release/release-notes.md', ['## Notes']),
+      md('build/*/red.log', []),
+      md('build/*/green.log', []),
       md('build/*/review.md', ['## Verdict']),
     ],
     roles: ['po', 'tech-lead', 'architect', 'sre', 'human'],
@@ -60,7 +62,7 @@ export const GATE_DEFS = {
   },
 };
 
-const OPTIONAL_CHECKS = new Set(['a11y', 'load']);
+const OPTIONAL_CHECKS = new Set(['a11y']);
 
 async function walk(root, dir = '') {
   const out = [];
@@ -84,6 +86,14 @@ export async function expandArtifacts(root, pattern) {
   const all = await walk(base);
   const re = globToRegExp(pattern);
   return all.filter((rel) => re.test(rel));
+}
+
+function sectionBody(text, heading) {
+  const start = text.indexOf(heading);
+  if (start === -1) return '';
+  const after = text.slice(start + heading.length);
+  const next = after.search(/\n## /);
+  return (next === -1 ? after : after.slice(0, next)).trim();
 }
 
 export async function validateArtifacts(root, artifacts) {
@@ -116,7 +126,15 @@ export async function validateArtifacts(root, artifacts) {
         continue;
       }
       for (const heading of artifact.headings) {
-        if (!text.includes(heading)) failures.push(`missing heading "${heading}" in docs/agile/${rel}`);
+        if (!text.includes(heading)) {
+          failures.push(`missing heading "${heading}" in docs/agile/${rel}`);
+          continue;
+        }
+        const body = sectionBody(text, heading);
+        if (body.length === 0) failures.push(`empty section "${heading}" in docs/agile/${rel}`);
+        else if (/^(todo|tbd|placeholder|n\/a)/i.test(body)) {
+          failures.push(`placeholder section "${heading}" in docs/agile/${rel}`);
+        }
       }
     }
   }
@@ -131,15 +149,57 @@ export async function loadProfile(root) {
   }
 }
 
+function cleanEnv() {
+  const env = { ...process.env };
+  delete env.NODE_TEST_CONTEXT;
+  delete env.NODE_OPTIONS;
+  return env;
+}
+
 function runCommand(root, command) {
   return new Promise((resolve) => {
-    execFile('sh', ['-c', command], { cwd: root, timeout: 600_000, maxBuffer: 10 * 1024 * 1024 }, (err, stdout, stderr) => {
+    execFile('sh', ['-c', command], { cwd: root, env: cleanEnv(), timeout: 600_000, maxBuffer: 10 * 1024 * 1024 }, (err, stdout, stderr) => {
       const output = `${stdout}${stderr}`.trim();
-      if (!err) return resolve({ ok: true, detail: 'ok' });
+      if (!err) return resolve({ ok: true, detail: 'ok', output });
       const reason = err.killed ? 'timed out' : err.code === 'ENOENT' ? 'command not found' : `exit ${err.code}`;
       resolve({ ok: false, detail: `${reason}: ${command}${output ? ` :: ${output.slice(-500)}` : ''}` });
     });
   });
+}
+
+export function coveragePercent(output) {
+  const allLine = output.split('\n').find((line) => /all files/i.test(line));
+  if (allLine) {
+    const first = allLine.match(/all files\s*\|\s*(\d+(?:\.\d+)?)/i);
+    if (first) return Number(first[1]);
+  }
+  const matches = [...output.matchAll(/(\d+(?:\.\d+)?)\s*%/g)].map((m) => Number(m[1]));
+  return matches.length === 0 ? null : Math.min(...matches);
+}
+
+export async function validateTddEvidence(root) {
+  const failures = [];
+  const reds = await expandArtifacts(root, 'build/*/red.log');
+  if (reds.length === 0) failures.push('missing TDD evidence: no build/*/red.log');
+  for (const rel of reds) {
+    const text = await readFile(join(agileDir(root), rel), 'utf8');
+    const m = text.match(/#\s*fail\s+(\d+)/);
+    if (!m) failures.push(`red.log has no failure count: docs/agile/${rel}`);
+    else if (Number(m[1]) === 0) failures.push(`red.log shows zero failures: docs/agile/${rel}`);
+  }
+  const greens = await expandArtifacts(root, 'build/*/green.log');
+  if (greens.length === 0) failures.push('missing TDD evidence: no build/*/green.log');
+  for (const rel of greens) {
+    const text = await readFile(join(agileDir(root), rel), 'utf8');
+    if (!/#\s*fail\s+0/.test(text)) failures.push(`green.log does not show a clean run: docs/agile/${rel}`);
+  }
+  const reviews = await expandArtifacts(root, 'build/*/review.md');
+  for (const rel of reviews) {
+    const text = await readFile(join(agileDir(root), rel), 'utf8');
+    const body = sectionBody(text, '## Verdict');
+    if (!/^pass\b/i.test(body)) failures.push(`review verdict is not pass: docs/agile/${rel}`);
+  }
+  return failures;
 }
 
 export async function runChecks(root, profile, names = ['test', 'coverage', 'lint', 'build', 'secretScan']) {
@@ -158,17 +218,21 @@ export async function runChecks(root, profile, names = ['test', 'coverage', 'lin
       continue;
     }
     const result = await runCommand(root, command);
+    if (result.ok && name === 'coverage') {
+      const percent = coveragePercent(result.output ?? '');
+      if (percent === null) {
+        results.push({ name, ok: false, detail: `coverage command reported no percentage: ${command} :: ${(result.output ?? '').slice(-300)}` });
+        continue;
+      }
+      if (percent < 80) {
+        results.push({ name, ok: false, detail: `coverage ${percent}% is below the 80% threshold: ${command}` });
+        continue;
+      }
+    }
     results.push({ name, ...result });
     if (!result.ok && name === 'test') break;
   }
   return { ok: results.every((r) => r.ok), results };
-}
-
-function roleForArtifact(path) {
-  for (const [role, scopes] of Object.entries(ROLE_SCOPE)) {
-    if (scopes.some((glob) => globToRegExp(glob).test(`docs/agile/${path}`))) return role;
-  }
-  return null;
 }
 
 export async function checkGate(root, gate) {
@@ -178,6 +242,7 @@ export async function checkGate(root, gate) {
   const failures = [];
 
   failures.push(...(await validateArtifacts(root, def.artifacts)));
+  if (gate === 'G3') failures.push(...(await validateTddEvidence(root)));
 
   const profile = await loadProfile(root);
   const checks = await runChecks(root, profile, def.checks);
@@ -185,13 +250,8 @@ export async function checkGate(root, gate) {
     if (!result.ok) failures.push(`check ${result.name}: ${result.detail}`);
   }
 
-  const authors = {};
-  for (const artifact of def.artifacts) {
-    const role = roleForArtifact(artifact.path.replace(/\*.*$/, ''));
-    if (role) authors[`docs/agile/${artifact.path}`] = role;
-  }
   const waivers = activeWaivers(state);
-  const reviews = await validateReviews(root, gate, def.roles, authors, waivers);
+  const reviews = await validateReviews(root, gate, def.roles, {}, waivers);
   failures.push(...reviews.failures);
 
   const signers = (await readReviews(root, gate)).map((r) => (r.role === 'human' ? 'human' : `agile-${r.role}`));
@@ -201,7 +261,7 @@ export async function checkGate(root, gate) {
     ...ROLE_SCOPE.human,
     ...signers.flatMap((role) => ROLE_SCOPE[role] ?? []),
   ];
-  const boundary = await checkBoundary(root, allowed, state.stageBase);
+  const boundary = await checkBoundary(root, allowed, state.stageBase, state.stageIgnored ?? []);
   if (!boundary.ok) {
     failures.push(boundary.reason ?? `boundary violation: ${boundary.violations.join(', ')}`);
   }
