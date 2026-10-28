@@ -39,6 +39,7 @@ Out of scope:
 | B2 | Isolation | One subagent per role; artifacts on disk are the only handoff |
 | B3 | Content | Fresh, self-contained skills. No delegation to existing skills |
 | B4 | Naming | `agile-flow`, `agile-po`, `agile-ba`, `agile-ux`, `agile-architect`, `agile-tech-lead`, `agile-dev`, `agile-qa`, `agile-sre` |
+| B5 | Boundaries | Hard. A role may not act, write, or sign outside its declared scope |
 | C1 | Rhythm | Linear first increment, then a repeating sprint loop |
 | C2 | Order | intake → discovery → shaping → ux → architecture → planning → build → quality → release → operations → retro |
 | C3 | Gates | Hard. Advance only on satisfied gate |
@@ -92,6 +93,35 @@ Story writing happens in the shaping phase and again in each refinement. The PO 
 - Tech lead: feasibility, slice size, technical debt introduced or repaid.
 
 DoR requires all four sign-offs plus a PO priority value. A story without a wireframe reference is not ready.
+
+### 4.2 Role boundaries
+
+Roles do not cross their defined boundary. A role that finds work outside its scope does not do it. It records the need and returns a handoff request to the orchestrator, which spawns the owning role.
+
+Rules:
+
+1. **Write scope.** Each role writes only to its owned paths. Any write outside that set is a boundary violation and fails the stage.
+2. **No self-approval.** A sign-off may not be issued by the role that authored the artifact under review.
+3. **No silent substitution.** A role may not perform another role's activity even when it believes it can do it better or the owning role is unavailable.
+4. **No scope expansion.** A role may not add requirements, change priorities, or widen the increment.
+5. **Handoff, not takeover.** Missing input from another role is escalated or requested, never invented.
+6. **Explicit non-applicability.** A role may declare a requirement not applicable, with a reason. It may not silently skip it.
+
+Owned paths and forbidden actions:
+
+| Skill | Owned paths | Must not |
+|---|---|---|
+| `agile-flow` | `state.json`, `reviews/` index, `retro/` | Write product artifacts, sign a gate, edit code |
+| `agile-po` | `vision.md`, `personas.md`, `success-metrics.md`, `backlog.md` | Write stories, design UX, choose architecture, write code, sign quality evidence |
+| `agile-ba` | `stories/`, `refinements/` | Set priority, draw wireframes, decide architecture, write production code |
+| `agile-ux` | `ux/` | Choose technology, write production code, define acceptance scope, approve architecture |
+| `agile-architect` | `architecture/` | Write product code, write stories, set business priority, sign technical debt |
+| `agile-tech-lead` | `build/*/plan.md`, `build/*/review.md`, debt register in `architecture/debt.md` | Define system architecture, write stories, set priority, sign architecture conformance |
+| `agile-dev` | product code, `build/*/{red.log,green.log}`, CI config, IaC | Edit acceptance criteria, reorder backlog, approve its own review, sign release |
+| `agile-qa` | `quality/` | Fix product code, change AC, waive a defect, sign release |
+| `agile-sre` | `operations/` | Change product behavior, redefine architecture, alter acceptance criteria |
+
+A violation is detected, not negotiated. `check` compares the paths changed during a stage against the active role's write scope, and rejects a sign-off whose role authored the artifact. On violation the stage fails, the change is not committed, and the orchestrator escalates with the offending paths.
 
 ## 5. Phase and gate model
 
@@ -230,6 +260,8 @@ at: 2026-10-27T10:00:00Z
   "mode": "greenfield",
   "sprint": 1,
   "phase": "build",
+  "activeRole": "agile-dev",
+  "writeScope": ["src/**", "test/**", "docs/agile/build/**"],
   "gates": {
     "G0": { "status": "pass", "at": "..." },
     "G1": { "status": "pass", "at": "..." },
@@ -260,7 +292,7 @@ Human-signed only. A waiver names the gate, the requirement waived, the reason, 
 | `init --repo <path> --mode greenfield\|brownfield` | Creates `docs/agile/`, state file, stack profile | 0, 2 if already initialized |
 | `status` | Prints phase, gate states, blocked reasons, open waivers, escalation | 0 |
 | `next` | Prints the next action, the skill to spawn, and required inputs | 0, 3 if blocked |
-| `check <gate>` | Runs structural, executable, and sign-off validation | 0 pass, 1 fail with reasons |
+| `check <gate>` | Runs structural, executable, sign-off, and boundary validation: no write outside `writeScope`, no self-approval | 0 pass, 1 fail with reasons |
 | `sign <gate> --role <role> --verdict <v> --evidence <paths>` | Writes a review record after validating role and evidence | 0, 1 invalid |
 | `waive <gate> --reason <text> --expires <date> --approver human` | Records a human waiver | 0, 1 if approver is not human |
 | `resume` | Clears an escalation only when the human supplies a resolution note | 0, 1 |
@@ -286,12 +318,19 @@ description: <when to use, one sentence>
 ## Outputs
 <artifact paths this role must write>
 
+## Boundaries
+owned_paths: <glob list>
+must_not: <forbidden actions, one per line>
+handoff: <which role owns each thing this role does not>
+
 ## Method
 <role-specific method, checklists, and quality bar>
 
 ## Refuse
 <conditions where the role must stop and escalate instead of producing output>
 ```
+
+The `Boundaries` block is mandatory and is copied into `state.json.writeScope` when the role is active, so the CLI can validate writes against it. A role skill without a `Boundaries` block is rejected at load time.
 
 Frontmatter carries `name` and `description` only. Role skills do not spawn subagents; only `agile-flow` spawns. Role skills state their inputs and outputs by path, and they must not write outside their owned paths.
 
@@ -338,6 +377,7 @@ Done: AC verified by test, changed-code coverage ≥ 80%, lint clean, no new vul
 2. Run the flow from intake to retro. Assert every gate refuses while a required artifact, check, or sign-off is missing.
 3. Run again on a brownfield copy with an injected legacy problem. Assert the legacy assessment appears and feeds the debt register.
 4. Assert escalation fires on: second gate failure, missing toolchain, and a request to force-push.
+5. Assert a boundary violation is refused: a role writing outside its `writeScope`, and a role signing off on an artifact it authored.
 5. Assert `state.json` alone is sufficient to resume after a session restart.
 
 Validation passes only if the fixture reaches retro with a working increment and all gate evidence present.
