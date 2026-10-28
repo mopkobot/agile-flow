@@ -118,6 +118,13 @@ async function cmdNext(cwd) {
   console.log(`phase: ${action.phase}`);
   console.log(`role: ${action.role}`);
   console.log(`gate: ${action.gate ?? 'none'}`);
+  const today = new Date().toISOString().slice(0, 10);
+  const gateWaivers = (state.waivers ?? []).filter(
+    (w) => w.expires >= today && (!action.gate || w.gate === action.gate),
+  );
+  for (const waiver of gateWaivers) {
+    console.log(`waiver: ${waiver.gate} ${waiver.requirement} until ${waiver.expires}`);
+  }
   for (const input of action.inputs) console.log(`input: ${input}`);
   if (action.blocked) {
     console.log(`blocked: ${action.blocked}`);

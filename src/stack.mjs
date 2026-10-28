@@ -1,7 +1,7 @@
 import { accessSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-const SECRET_SCAN = `git rev-parse --git-dir >/dev/null 2>&1 || exit 1; ! git grep -qEI 'AKIA[0-9A-Z]{16}|BEGIN (RSA |OPENSSH )?PRIVATE KEY' -- .`;
+const SECRET_SCAN = `git rev-parse --git-dir >/dev/null 2>&1 || exit 1; git grep -qEI 'AKIA[0-9A-Z]{16}|BEGIN (RSA |OPENSSH )?PRIVATE KEY' -- .; [ $? -eq 1 ]`;
 
 const DETECTORS = [
   {
