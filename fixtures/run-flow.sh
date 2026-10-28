@@ -21,6 +21,29 @@ say "init"
 flow init --mode "$MODE" --repo . >/dev/null
 commit "chore: initialize agile flow"
 
+if [ "$MODE" = "brownfield" ]; then
+  mkdir -p "$A/architecture"
+  put "$A/architecture/legacy-assessment.md" <<'EOF'
+# Legacy assessment
+
+## Inventory
+- `src/app.mjs`: request handling and greeting rule.
+- `src/server.mjs`: process entry.
+
+## Test baseline
+- 2 tests, happy path only.
+- Empty-name and length-limit paths untested.
+
+## Duplicated rules
+- Name length enforced in `greet()` at 40 characters and in `handler()` at 50.
+- Divergence is invisible to the suite.
+
+## Risks
+- Silent behavior change if either limit moves.
+EOF
+  commit "docs: legacy assessment"
+fi
+
 say "discovery"
 flow next >/dev/null
 flow advance >/dev/null

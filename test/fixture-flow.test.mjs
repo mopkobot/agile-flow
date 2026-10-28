@@ -6,9 +6,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { run } from '../src/cli.mjs';
 
-async function copyFixture() {
+async function copyFixture(name = 'sample-app') {
   const repo = await mkdtemp(join(tmpdir(), 'af-fixture-'));
-  await cp(join(import.meta.dirname, '..', 'fixtures', 'sample-app'), repo, { recursive: true });
+  await cp(join(import.meta.dirname, '..', 'fixtures', name), repo, { recursive: true });
   execFileSync('git', ['init', '-q'], { cwd: repo });
   execFileSync('git', ['config', 'user.name', 'test'], { cwd: repo });
   execFileSync('git', ['config', 'user.email', 'test@local'], { cwd: repo });
@@ -62,4 +62,15 @@ test('the full flow reaches retro with every gate passed', async () => {
   const state = JSON.parse(await readFile(join(repo, 'docs/agile/state.json'), 'utf8'));
   assert.equal(state.phase, 'retro');
   for (const gate of ['G0', 'G1', 'G2', 'G3', 'G4']) assert.equal(state.gates[gate].status, 'pass', gate);
+});
+
+test('the brownfield flow records a legacy assessment before build', async () => {
+  const repo = await copyFixture('legacy-app');
+  const script = join(import.meta.dirname, '..', 'fixtures', 'run-flow.sh');
+  execFileSync('bash', [script, repo, 'brownfield'], { cwd: repo, stdio: 'ignore', timeout: 120_000 });
+  const assessment = await readFile(join(repo, 'docs/agile/architecture/legacy-assessment.md'), 'utf8');
+  assert.match(assessment, /Duplicated rules/);
+  const state = JSON.parse(await readFile(join(repo, 'docs/agile/state.json'), 'utf8'));
+  assert.equal(state.mode, 'brownfield');
+  assert.equal(state.phase, 'retro');
 });

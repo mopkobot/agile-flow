@@ -1,0 +1,13 @@
+{
+  "name": "legacy-greeting",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "coverage": "node --test --experimental-test-coverage",
+    "lint": "node --check src/app.mjs && node --check src/server.mjs",
+    "build": "node --check src/app.mjs && node --check src/server.mjs",
+    "start": "node src/server.mjs"
+  }
+}
