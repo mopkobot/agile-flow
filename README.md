@@ -1,182 +1,173 @@
-# Agile Flow Skills
+# Agile Flow
 
-Ten OpenCode skills that run a real agile delivery lifecycle: one orchestrator, eight delivery roles, one independent auditor, hard gates, and enforced role boundaries.
+[![ci](https://github.com/mopkobot/agile-flow/actions/workflows/ci.yml/badge.svg)](https://github.com/mopkobot/agile-flow/actions/workflows/ci.yml)
+[![license](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
-The flow produces a working increment, not a ceremony transcript. Every phase leaves artifacts on disk, every gate is machine-checked, and every role is forbidden from doing another role's job.
+Ten OpenCode skills that run a real agile delivery lifecycle: one orchestrator, eight delivery roles, one independent auditor, hard gates, and machine-enforced role boundaries.
 
-## Skills
+The output is a working increment plus the evidence that it is safe to release. Not a ceremony transcript, not a planning simulator.
 
-| Skill | Role | Owns |
-|---|---|---|
-| `agile-flow` | Orchestrator | Phase sequencing, gate checks, escalation, retrospectives |
-| `agile-po` | Product owner | Vision, personas, metrics, priority, release scope |
-| `agile-ba` | Business analyst | Stories, acceptance criteria, NFRs, open questions |
-| `agile-ux` | UX designer | Flows, tokens, HTML wireframes, usability notes |
-| `agile-architect` | Architect | System structure, NFR targets, ADRs, fitness functions |
-| `agile-tech-lead` | Technical lead | Story solutioning, debt register, code review |
-| `agile-dev` | Developer and DevOps | TDD loop, trunk commits, CI, IaC, observability |
-| `agile-qa` | Quality analyst | Test strategy, exploratory, a11y, defects |
-| `agile-sre` | SRE | SLOs, runbooks, alerts, load tests, postmortems |
-| `agile-auditor` | Auditor | Independent claim sampling at G3 and G4 |
+```
+intake → discovery → shaping → ux → architecture → planning
+      → build → quality → release → operations → retro → next sprint
+```
+
+## Why this exists
+
+Agent teams fail in predictable ways: they skip tests, agree with themselves, write plausible-looking documents nobody checks, and quietly do each other's jobs. This harness makes those failures expensive:
+
+- A gate opens only when `check` exits 0. No assertion, no prose, no "looks done".
+- Every role has owned paths. Writing outside them fails the phase.
+- Sign-offs require a token the orchestrator cannot mint.
+- Review findings need `path:line`. QA evidence needs a real command. NFRs need a measurement.
+- An auditor tries to falsify the record before release.
+- The operator sets a standing tech-debt allocation that G2 enforces and G3 verifies.
 
 ## Install
 
 ```bash
+git clone https://github.com/mopkobot/agile-flow.git
+cd agile-flow
 ./install.sh
 ```
 
-Links each `skills/<name>` into `~/.config/opencode/skills/<name>`. Override the destination with `AGILE_SKILLS_TARGET`. The installer refuses to replace a real directory.
+Symlinks each `skills/<name>` into `~/.config/opencode/skills/`. Override the target with `AGILE_SKILLS_TARGET`. The installer refuses to replace a real directory. Edits to `skills/` are live immediately through the symlinks.
+
+Requires Node 20 or newer. Zero runtime dependencies.
 
 ## Use
 
-In a target repository:
+In the repository you want to deliver:
 
 ```bash
-node /path/to/agile-flow/bin/agile-flow.mjs init --mode greenfield --repo .
+node /path/to/agile-flow/bin/agile-flow.mjs init --mode greenfield --repo . --debt-percent 20
 ```
 
-Then ask the agent to run `agile-flow`. It reads `docs/agile/state.json`, spawns the role for the current phase, and advances only after `check <gate>` exits 0.
+Then ask the agent to run `agile-flow`. It reads `docs/agile/state.json`, spawns the role for the current phase, and advances only after the gate passes.
 
-## Phases and gates
+Brownfield repositories are asked one question first: do you want an AI development harness (product context, architecture boundaries, reliability signals, agent rules) before discovery starts?
 
-```
-intake -> discovery [G0] -> shaping -> ux -> architecture [G1] -> planning [G2]
-       -> build (story loop) -> quality -> release [G3] -> operations [G4] -> retro
-       -> shaping (next sprint)
-```
+## What each skill actually does
 
-- **DoR story**: story template, four shaping sign-offs (BA, UX, SRE, tech lead), wireframe present, no blocking open question. Checked with `agile-flow check DoR-<id>` after UX.
-- **Harness (brownfield first)**: product, architecture, reliability, agent rules, commands. `agile-flow harness
-agile-flow debt set <percent>
-agile-flow identity issue --role <role>` lists gaps. The orchestrator asks whether to define one before discovery.
-- **G0 scope**: vision, personas, metrics, backlog. PO and human.
-- **G1 design**: architecture, ADRs, NFRs, fitness functions, threat model, glossary, UX, tech-lead review. Architect, tech lead, UX, human.
-- **G2 plan**: sprint scope. Human.
-- **G3 release**: tests, coverage, lint, build, secret scan, load evidence. PO functionality, tech lead debt, architect conformance, SRE supportability, human.
-- **G4 operations**: SLOs live, runbooks, alerts as code, load test recorded. SRE.
+| Skill | Phase | What happens | Sign-off |
+|---|---|---|---|
+| `agile-flow` | all | Reads state, spawns one role at a time, runs gate checks, records escalations, closes retros | None; enforces only |
+| `agile-po` | discovery, planning, release | Writes vision, personas, success metrics, ranked backlog, sprint scope proposal, release notes; runs the demo | G3 functionality |
+| `agile-ba` | shaping, refinement | Turns backlog items into tracer-bullet stories: Given/When/Then, non-goals, test plan, wireframe link, NFRs, open questions | DoR readiness |
+| `agile-ux` | shaping, ux | Writes flows with empty/loading/error/success states, design tokens, static HTML wireframes, usability notes with contrast checks | G1 interaction quality |
+| `agile-architect` | discovery, architecture | Writes system view, C4 diagrams, measurable NFRs, ADRs, fitness functions, threat model, glossary, legacy assessment; selects patterns from problem and NFRs | G1 structure, G3 conformance |
+| `agile-tech-lead` | shaping, build, release | Writes the per-story solution plan, reviews every change for correctness, code smells and clean code with cited findings, owns the debt register, allocates debt at planning | G1 and G3 technical debt |
+| `agile-dev` | build | Claims a card, writes failing tests, then the minimum code, records RED and GREEN evidence, keeps trunk green, owns CI, IaC and observability hooks | Build complete per story |
+| `agile-qa` | quality | Writes test strategy, criterion-by-criterion evidence with executed commands, exploratory charters, a11y/perf/security checks, defect records with severities | Supplies evidence; does not sign release |
+| `agile-sre` | architecture, operations | Writes SLOs and error budgets, runbooks per alert, alerts and dashboards as code, load-test results, incident process, blameless postmortems | G3 supportability, G4 readiness |
+| `agile-auditor` | release, operations | Samples the riskiest claims, reproduces or falsifies each against code and commands, records the audit | Records audits; never signs gates |
 
-## CLI
+Every role declares owned paths, forbidden actions, and explicit refusal conditions. A role that meets work outside its scope hands off instead of doing it.
+
+## Gates
+
+| Gate | Requires | Signers |
+|---|---|---|
+| DoR | Story template, four shaping sign-offs (BA, UX, SRE, tech lead), wireframe, priority, no blocking question | Those four plus PO priority |
+| G0 scope | Vision, personas, success metrics, backlog | PO + human |
+| G1 design | Architecture, NFRs with measurements, ADRs, fitness functions, threat model, glossary, UX flows, tokens, wireframes | Architect, tech lead, UX + human |
+| G2 plan | Sprint plan with debt allocation matching the configured percentage; rows resolve to real cards | Human |
+| G3 release | Tests, changed-code coverage, lint, build, secret scan, TDD evidence, cited reviews, QA evidence, audit | PO, tech lead, architect, SRE, human |
+| G4 operations | SLOs, runbooks, alerts as code, load-test result, audit | SRE |
+
+Failure path: retry once with corrective input, then escalate and stop. A gate never opens because retries ran out.
+
+## Commands
 
 ```bash
-agile-flow init --mode greenfield|brownfield --repo <path>
+agile-flow init --mode greenfield|brownfield --repo <path> [--debt-percent N]
 agile-flow status
 agile-flow next
 agile-flow advance [--phase <phase>]
+agile-flow check <gate|DoR-<story-id>>
+agile-flow sign <gate> --role <role> --verdict pass|fail|pass-with-risk --evidence <paths> [--note <text>] [--agent <name>]
+agile-flow waive <gate> --requirement <text> --reason <text> --expires YYYY-MM-DD --approver human
 agile-flow guard <push|force-push|deploy|migrate|rotate-secret|delete-data> --question <text>
+agile-flow resume --note <resolution>
 agile-flow story <id> <in-dev|in-qa|done> --role <role> [--agent <name>]
 agile-flow tracker sync [--dry-run]
-agile-flow setup-human
-agile-flow audit sample [--count <n>]
-agile-flow audit record --gate <G3|G4> --verdict pass|fail --checked <n> --note <text>
-agile-flow harness
+agile-flow audit sample [--count N]
+agile-flow audit record --gate <G3|G4> --verdict pass|fail --checked N --note <text>
+agile-flow retro list | check | approve --target <skill> --note <text>
 agile-flow debt set <percent>
-agile-flow identity issue --role <role>
-agile-flow check <gate|DoR-<story-id>>
-agile-flow sign <gate> --role <role> --verdict pass|fail|pass-with-risk --evidence <paths>
-agile-flow waive <gate> [--requirement <text>] --reason <text> --expires YYYY-MM-DD --approver human
-agile-flow resume --note <resolution>
+agile-flow harness
+agile-flow identity issue --role <role> [--ttl-days N]
+agile-flow setup-human
 agile-flow skills
 ```
 
 Exit codes: `0` ok, `1` failure, `2` already initialized, `3` blocked.
 
-Story status is the claim mechanism for parallel agents. `in-dev` belongs to the dev role, `in-qa` to QA, `done` to the flow. A rejected transition means another agent owns the card. `tracker sync` mirrors status to GitHub issue labels (`status:ready`, `status:in-dev`, `status:in-qa`, `status:done`).
+## Parallel agents
 
-Role sign-offs are authenticated with per-role tokens: the human runs `identity issue --role <role>` and passes the token to that role as `AGILE_ROLE_TOKEN`. Tokens are stored only as hashes and can be rotated.
+Story status is the claim. `in-dev` requires `--agent`; a card held by another agent is refused. `in-qa` belongs to QA, `done` to the flow. State writes take a lock and reject stale revisions, so two agents cannot silently clobber each other. `tracker sync` mirrors status to GitHub labels and refreshes the issue body.
 
-Human sign-offs are authenticated with a passphrase hashed at `init` or `setup-human`. Set `AGILE_HUMAN_PASSPHRASE` for that command, or run it in an interactive terminal. An agent shell without the passphrase cannot sign as the human.
+## Retro loop
 
-`status` also reports the debt allocation, audit freshness, token expiry per role, and harness gaps.
+Every retro action is typed and targeted. `advance` refuses to leave retro until each one is real:
 
-Coverage: changed code is measured from per-file rows when the coverage report exposes them, falling back to whole-project line coverage. A command that enforces its own threshold (`--check-coverage`, `--cov-fail-under`, `--fail-under`) is trusted on exit code; otherwise the line coverage it reports must reach 80%. Point the command at changed-code coverage when the tool supports it.
+- `process` targets a skill. The diff is shown, applied, tested, and approved by the human with `retro approve`. Changes are live immediately through the symlinks.
+- `product` targets a backlog card. PO adds it, BA shapes it, `tracker sync` opens the issue.
+- `debt` targets a debt-register row.
+- `dropped` keeps a written reason.
 
-## Rules the flow enforces
+## Configuration
 
-- **Hard gates.** A gate opens only on exit 0 from `check`. Nothing else advances a phase.
-- **Executable checks.** Stack commands run for real. A missing command fails the gate; it is never skipped.
-- **Boundaries.** Every role has an owned path set. A write outside it fails the stage.
-- **No self-approval.** A signer may not have authored the artifact it signs.
-- **Human-only waivers.** Waivers carry a reason and an expiry, and expire the gate back to closed.
-- **No fabricated evidence.** RED and GREEN logs must show real runs; missing evidence is a refusal.
-- **Escalation.** Two failed attempts, a missing decision, an irreversible action, or an unrunnable check stops the flow and asks the operator.
-
-## Definition of Done
-
-Acceptance criteria verified by test, changed-code coverage at least 80%, lint clean, no new vulnerabilities, docs updated, observability hooks present, mockups honored, no unowned debt, CI green on trunk, RED and GREEN evidence recorded, reviewer verdict `pass`.
+- **Debt allocation.** Set once, enforced every sprint at G2 and verified at G3.
+- **Harness.** Brownfield repos are offered a harness before discovery; `harness` lists gaps with fixes.
+- **Identity.** Role tokens are issued under human authentication and expire; only hashes are stored.
+- **Human authentication.** Passphrase hashed at init or `setup-human`. Human sign-offs and token issuance require it.
+- **Tracker.** GitHub via `gh`, status labels and issue bodies.
 
 ## Repository layout
 
 ```
-skills/<name>/SKILL.md   ten skills
-bin/agile-flow.mjs       CLI entry
-src/                     state machine, gates, boundaries, reviews, waivers
-templates/               story, ADR, review, state, waiver, retro, postmortem, checklists
-fixtures/sample-app/     greenfield validation target
-fixtures/legacy-app/     brownfield validation target with duplicated rule
-fixtures/run-flow.sh     drives intake to retro
-test/                    CLI and flow tests
-docs/specs/              design spec
-docs/plans/              implementation plan
-.github/workflows/ci.yml runs tests and skill validation on push and PR
+skills/<name>/SKILL.md     ten skills
+bin/agile-flow.mjs         CLI entry
+src/                       state machine, gates, boundaries, identity, tracker, audit
+templates/                 story, ADR, review, state, waiver, retro, postmortem, harness, checklists
+fixtures/sample-app/       greenfield validation target
+fixtures/legacy-app/       brownfield target with a duplicated rule
+fixtures/run-flow.sh       drives intake to retro
+test/                      CLI, gate, concurrency, and end-to-end tests
+docs/specs/                design spec
+docs/plans/                implementation plan
 ```
-
-## Tech debt allocation
-
-At intake the operator sets a standing percentage of each sprint for technical debt. It is stored in state and enforced at G2: the sprint plan must declare the same percentage and include weighted debt work that meets it (`small` 1, `medium` 2, `large` 3). Plans that spend the sprint entirely on features are refused, plan rows must resolve to a real story or debt row, and G3 refuses when planned debt was not actually completed.
-
-## Retro loop
-
-A retro is not a meeting summary. Each action is typed and targeted, and `advance` refuses to leave retro until every action points at something real:
-
-- `process` targets a skill. On approval the skill file is edited; because installed skills are symlinks into this repo, the change takes effect immediately. The human records the approval with `retro approve`; without it the sprint cannot close.
-- `product` targets a backlog card. The PO adds the row, BA shapes the story, and `tracker sync` opens the issue.
-- `debt` targets a debt-register row owned by the tech lead.
-- `dropped` keeps a written reason.
-
-```bash
-agile-flow retro list    # what the retro committed to
-agile-flow retro check   # validates targets and approvals before the next sprint
-agile-flow retro approve --target <agile-skill> --note "<what you approved>"  # human-only
-```
-
-## Design constraints
-
-- Files are authoritative. Chat is disposable; a phase advances only when artifacts on disk and `check` agree.
-- Gates are hard. The orchestrator cannot open one by assertion, and waivers are human-signed with an expiry.
-- Roles are bounded. Each skill declares owned paths and forbidden actions; the CLI rejects writes outside them.
-- Claims are cited. Review findings need `path:line`; QA evidence needs a real command; NFRs need a measurement.
-- Judgment is sampled. An independent auditor at G3 and G4 tries to falsify the record rather than trust it.
-- Parallel work is coordinated. Story status claims a card for one agent; state writes take a lock and reject stale revisions.
-- No estimation, no daily standup, no tracker other than GitHub. Those were deliberate exclusions.
-
-## Known limits
-
-- Role tokens make casual impersonation fail, but an agent holding the human passphrase can still mint tokens. Same-user isolation is not a security boundary.
-- The auditor is a separate spawn by instruction; the CLI records the agent but cannot prove which process ran it.
-- Stack detection covers Node, Python, Go, Rust, Java, and Ruby. Only Node and Ruby are exercised by running tests here; the Maven path is tested when `mvn` is installed.
-- Harness assessment on brownfield is advisory by decision; missing tests or CI are recorded, not blocked.
 
 ## Validate
 
 ```bash
 node --test
-
-# greenfield
-cp -R fixtures/sample-app /tmp/af-green && cd /tmp/af-green
-git init -q && git add -A && git commit -qm init
-bash /path/to/agile-flow/fixtures/run-flow.sh /tmp/af-green
-
-# brownfield
-cp -R fixtures/legacy-app /tmp/af-brown && cd /tmp/af-brown
-git init -q && git add -A && git commit -qm init
-bash /path/to/agile-flow/fixtures/run-flow.sh /tmp/af-brown brownfield
+node bin/agile-flow.mjs skills
 ```
 
-The brownfield run must surface the duplicated name-length rule in `docs/agile/architecture/legacy-assessment.md` before any story is built.
+The suite includes two end-to-end flows: a greenfield app and a brownfield app whose duplicated business rule must be surfaced before build. It also covers gate refusals, boundary violations, stale writes, token expiry, and a real second sprint with TDD evidence.
+
+## Design constraints
+
+- Files are authoritative. Chat is disposable.
+- Gates are hard. Only `check` opens them.
+- Roles are bounded. Owned paths are enforced, not advisory.
+- Claims are cited. Structure is checked; honesty is sampled.
+- Judgment is independent at release. The auditor has no authorship stake.
+- No estimation, no daily standup, no tracker other than GitHub. Deliberate exclusions.
+
+## Known limits
+
+- Role tokens stop casual impersonation; an agent holding the human passphrase can still mint them. Same-user isolation is not a security boundary.
+- The auditor is a separate spawn by instruction. The CLI records which agent ran it but cannot prove it.
+- Stack detection covers Node, Python, Go, Rust, Java, and Ruby. Node and Ruby are exercised end to end here; Maven runs when `mvn` is installed.
+- Harness assessment is advisory by operator decision.
+- Coverage uses changed-code rows when the tool reports them, otherwise whole-project line coverage.
 
 ## License
 
-Copyright 2026 mopkobot.
+Copyright 2026 mopkobot. Apache License 2.0. See `LICENSE` and `NOTICE`.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -189,5 +180,3 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-See `LICENSE` for the full text and `NOTICE` for attribution.

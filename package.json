@@ -1,14 +1,44 @@
 {
   "name": "agile-flow-skills",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.0",
+  "description": "OpenCode skills that run a real agile delivery lifecycle with hard gates, enforced role boundaries, and independent audit",
+  "license": "Apache-2.0",
+  "author": "mopkobot",
   "type": "module",
-  "description": "Agile delivery lifecycle skills for OpenCode with hard gates and enforced role boundaries",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mopkobot/agile-flow.git"
+  },
+  "homepage": "https://github.com/mopkobot/agile-flow#readme",
+  "bugs": {
+    "url": "https://github.com/mopkobot/agile-flow/issues"
+  },
+  "keywords": [
+    "opencode",
+    "skills",
+    "agile",
+    "sdlc",
+    "tdd",
+    "code-review",
+    "architecture",
+    "sre"
+  ],
   "bin": {
     "agile-flow": "./bin/agile-flow.mjs"
   },
+  "files": [
+    "bin/",
+    "src/",
+    "skills/",
+    "templates/",
+    "install.sh",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
+  ],
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "validate": "node bin/agile-flow.mjs skills"
   },
   "engines": {
     "node": ">=20"
