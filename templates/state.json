@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "targetRepo": null,
+  "mode": "greenfield",
+  "sprint": 1,
+  "phase": "intake",
+  "activeRole": "agile-flow",
+  "writeScope": [],
+  "stageBase": null,
+  "gates": {
+    "G0": { "status": "locked", "at": null },
+    "G1": { "status": "locked", "at": null },
+    "G2": { "status": "locked", "at": null },
+    "G3": { "status": "locked", "at": null },
+    "G4": { "status": "locked", "at": null }
+  },
+  "stories": {},
+  "gateRetries": {},
+  "waivers": [],
+  "escalation": null,
+  "stackDetected": false
+}
