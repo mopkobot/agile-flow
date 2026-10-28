@@ -7,6 +7,8 @@ import { recordReview, ReviewError } from './reviews.mjs';
 import { ROLE_SCOPE } from './boundary.mjs';
 import { checkGate } from './gates.mjs';
 import { addWaiver, WaiverError } from './waivers.mjs';
+import { validateSkillTree } from './skills.mjs';
+import { readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 
 function headSha(cwd) {
@@ -35,6 +37,8 @@ export async function run(argv, cwd = process.cwd()) {
         return await cmdCheck(rest, cwd);
       case 'waive':
         return await cmdWaive(rest, cwd);
+      case 'skills':
+        return cmdSkills(cwd, rest);
       default:
         return usage();
     }
@@ -195,8 +199,16 @@ async function cmdWaive(args, cwd) {
   }
 }
 
+function cmdSkills(cwd, args = []) {
+  const root = resolve(cwd, flag(args, 'dir') ?? 'skills');
+  const result = validateSkillTree(root);
+  for (const failure of result.failures) console.error(`FAIL ${failure}`);
+  if (result.ok) console.log(`ok ${readdirSync(root).filter((n) => n.startsWith('agile-')).length} skills`);
+  return result.ok ? 0 : 1;
+}
+
 function usage() {
-  console.error('usage: agile-flow <init|status|next|resume|sign|check|waive> [options]');
+  console.error('usage: agile-flow <init|status|next|resume|sign|check|waive|skills> [options]');
   return 1;
 }
 
