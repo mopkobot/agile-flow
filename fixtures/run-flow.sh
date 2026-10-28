@@ -450,9 +450,11 @@ put "$A/retro/retro-01.md" <<'EOF'
 - Collect SRE evidence during architecture.
 
 ## Actions
-| Action | Owner role | Story id | Due |
-|---|---|---|---|
-| Draft SLOs at G1 | sre | S-002 | sprint 02 |
+| action | type | target | owner | due |
+|---|---|---|---|---|
+| Draft SLOs at G1 | process | agile-sre | sre | sprint 02 |
+| Harden the greeting limit | product | S-001 | po | sprint 02 |
+| Retire hand-rolled routing | debt | D-001 | tech-lead | sprint 03 |
 EOF
 commit "docs: close retro 01"
 

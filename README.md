@@ -116,6 +116,20 @@ docs/plans/              implementation plan
 .github/workflows/ci.yml runs tests and skill validation on push and PR
 ```
 
+## Retro loop
+
+A retro is not a meeting summary. Each action is typed and targeted, and `advance` refuses to leave retro until every action points at something real:
+
+- `process` targets a skill. On approval the skill file is edited; because installed skills are symlinks into this repo, the change takes effect immediately.
+- `product` targets a backlog card. The PO adds the row, BA shapes the story, and `tracker sync` opens the issue.
+- `debt` targets a debt-register row owned by the tech lead.
+- `dropped` keeps a written reason.
+
+```bash
+agile-flow retro list    # what the retro committed to
+agile-flow retro check   # validates targets before the next sprint
+```
+
 ## Design constraints
 
 - Files are authoritative. Chat is disposable; a phase advances only when artifacts on disk and `check` agree.

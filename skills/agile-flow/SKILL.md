@@ -130,7 +130,12 @@ The auditor must not be a role that authored the artifacts it checks. If it is, 
 
 - Sprint planning, in the planning phase: `agile-po` proposes scope from priority order; write `plan/sprint-<NN>.md`; gate G2 requires the human.
 - Demo, in the release phase: `agile-po` writes the demo script into `release/release-notes.md`.
-- Retro, after G4: write `retro/retro-<NN>.md` from `templates/retro.md`. Turn each action into a backlog item or a deficit in the debt register. Increment `sprint` and return to shaping.
+- Retro, after G4: write `retro/retro-<NN>.md` from `templates/retro.md`. Every action gets a type and target. Then close the loop:
+  - `process` actions change how the team works. Draft the edit to `skills/<target>/SKILL.md`, show the operator the exact diff, and apply it only after approval. The installed skills are symlinks into this repository, so the change is live immediately. Run `node bin/agile-flow.mjs skills` and `node --test` after the edit, then commit.
+  - `product` actions become cards. Spawn `agile-po` to add the backlog row, then `agile-ba` to shape the story, then `tracker sync` to create the GitHub issue if a tracker is configured.
+  - `debt` actions become rows in `docs/agile/architecture/debt.md`, owned by `agile-tech-lead`.
+  - `dropped` actions keep a written reason.
+  Increment `sprint` and return to shaping only after `node bin/agile-flow.mjs retro check` passes.
 
 No daily standup. Do not invent status meetings.
 

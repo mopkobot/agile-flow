@@ -77,6 +77,11 @@ test('advance at retro starts the next sprint at shaping', async () => {
   state.phase = 'retro';
   for (const gate of Object.keys(state.gates)) state.gates[gate] = { status: 'pass', at: 'x' };
   await writeFile(statePath, JSON.stringify(state));
+  await mkdir(join(repo, 'docs/agile/retro'), { recursive: true });
+  await writeFile(
+    join(repo, 'docs/agile/retro/retro-01.md'),
+    '# Retro\n\n## Actions\n\n| action | type | target | owner | due |\n|---|---|---|---|---|\n| tighten review | process | agile-tech-lead | tech-lead | sprint 02 |\n',
+  );
   assert.equal(await run(['advance'], repo), 0);
   const next = JSON.parse(await readFile(statePath, 'utf8'));
   assert.equal(next.phase, 'shaping');

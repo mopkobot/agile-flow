@@ -73,3 +73,11 @@ test('dev always takes the highest-priority ready story', async () => {
   const flow = await read('agile-flow');
   assert.match(flow, /highest[- ]priority/i);
 });
+
+test('the retro closes the loop on process, product, and debt actions', async () => {
+  const flow = await read('agile-flow');
+  assert.match(flow, /process.*actions change how the team works/i);
+  assert.match(flow, /product.*actions become cards/i);
+  assert.match(flow, /debt.*actions become rows/i);
+  assert.match(flow, /retro check/);
+});

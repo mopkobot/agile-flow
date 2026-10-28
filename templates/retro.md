@@ -16,9 +16,12 @@ Blameless: describe systems and decisions, never individuals.
 
 ## Actions
 
-| Action | Owner role | Story id | Due |
-|---|---|---|---|
-| <change to make> | <role> | <S-000 or new> | <sprint or date> |
+Every action names its type and target, so nothing leaves the room unowned.
+`process` targets a skill, `product` targets a backlog card, `debt` targets a debt row, `dropped` needs a reason in the action text.
+
+| action | type | target | owner | due |
+|---|---|---|---|---|
+| <change to make> | process|product|debt|dropped | <agile-skill \| S-000 \| D-000 \| -> | <role> | <sprint or date> |
 
 ## Metrics
 

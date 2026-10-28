@@ -77,6 +77,8 @@ async function dispatch(command, rest, cwd) {
         return await cmdAudit(rest, cwd);
       case 'harness':
         return cmdHarness(cwd);
+      case 'retro':
+        return await cmdRetro(rest, cwd);
       case 'identity':
         return await cmdIdentity(rest, cwd);
       default:
@@ -302,6 +304,30 @@ async function cmdGuard(args, cwd) {
   return 1;
 }
 
+async function cmdRetro(args, cwd) {
+  const sub = args[0];
+  const state = await loadState(cwd);
+  const { checkRetroActions, parseRetroActions } = await import('./retro.mjs');
+  if (sub === 'check') {
+    const failures = await checkRetroActions(cwd, state.sprint);
+    for (const failure of failures) console.error(`- ${failure}`);
+    if (failures.length) return 1;
+    console.log('retro actions valid');
+    return 0;
+  }
+  if (sub === 'list') {
+    const actions = await parseRetroActions(cwd, state.sprint);
+    if (actions === null) {
+      console.error(`error: no retro file for sprint ${state.sprint}`);
+      return 1;
+    }
+    for (const action of actions) console.log(`${action.type}\t${action.target}\t${action.owner}\t${action.action}`);
+    return 0;
+  }
+  console.error('usage: agile-flow retro <list|check>');
+  return 1;
+}
+
 function cmdHarness(cwd) {
   const result = detectHarness(cwd);
   for (const item of result.present) console.log(`present: ${item}`);
@@ -492,6 +518,15 @@ async function cmdAdvance(args, cwd) {
   }
 
   const current = await loadState(cwd);
+  if (current.phase === 'retro') {
+    const { checkRetroActions } = await import('./retro.mjs');
+    const failures = await checkRetroActions(cwd, current.sprint);
+    if (failures.length > 0) {
+      console.error('error: retro actions are incomplete; cannot close the sprint');
+      for (const failure of failures) console.error(`- ${failure}`);
+      return 1;
+    }
+  }
   const target = current.phase === 'retro' ? 'shaping' : flag(args, 'phase') ?? nextPhase(current.phase);
   if (!target) {
     console.error('error: already at the final phase');
@@ -520,7 +555,7 @@ function cmdSkills(cwd, args = []) {
 }
 
 function usage() {
-  console.error('usage: agile-flow <init|status|next|advance|guard|resume|sign|check|waive|skills|setup-human|identity|story|tracker|audit|harness> [options]');
+  console.error('usage: agile-flow <init|status|next|advance|guard|resume|sign|check|waive|skills|setup-human|identity|story|tracker|audit|harness|retro> [options]');
   return 1;
 }
 

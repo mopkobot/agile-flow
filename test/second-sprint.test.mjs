@@ -142,7 +142,7 @@ dependencies: none
   assert.equal(await run(['check', 'G4'], repo), 0);
   assert.equal(await run(['advance'], repo), 0);
   await run(['next'], repo);
-  await put(repo, 'retro/retro-02.md', '# Retro 02\n\n## What worked\n- second sprint\n\n## Actions\n- none\n');
+  await put(repo, 'retro/retro-02.md', '# Retro 02\n\n## What worked\n- second sprint\n\n## Actions\n\n| action | type | target | owner | due |\n|---|---|---|---|---|\n| keep auditing | process | agile-auditor | sre | sprint 03 |\n');
   commit(repo, 'docs: retro 02');
 
   const state = JSON.parse(await readFile(join(repo, 'docs/agile/state.json'), 'utf8'));
