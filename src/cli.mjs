@@ -3,6 +3,7 @@ import { join, resolve } from 'node:path';
 import { initFlow, loadState, saveState, StateError, GATES, agileDir } from './state.mjs';
 import { detectStack, renderProfile } from './stack.mjs';
 import { nextAction } from './phases.mjs';
+import { recordReview, ReviewError } from './reviews.mjs';
 
 export async function run(argv, cwd = process.cwd()) {
   const [command, ...rest] = argv;
@@ -16,6 +17,8 @@ export async function run(argv, cwd = process.cwd()) {
         return await cmdNext(cwd);
       case 'resume':
         return await cmdResume(rest, cwd);
+      case 'sign':
+        return await cmdSign(rest, cwd);
       default:
         return usage();
     }
@@ -108,8 +111,31 @@ async function cmdResume(args, cwd) {
   return 0;
 }
 
+async function cmdSign(args, cwd) {
+  const gate = args[0];
+  const role = flag(args, 'role');
+  const verdict = flag(args, 'verdict');
+  const evidence = flag(args, 'evidence');
+  if (!gate || !role || !verdict || !evidence) {
+    console.error('usage: agile-flow sign <gate> --role <role> --verdict <pass|fail|pass-with-risk> --evidence <path[,path]>');
+    return 1;
+  }
+  const paths = evidence.split(',').map((p) => p.trim()).filter(Boolean);
+  try {
+    const path = await recordReview(cwd, { gate, role, verdict, evidence: paths });
+    console.log(`signed ${gate} as ${role}: ${path}`);
+    return 0;
+  } catch (err) {
+    if (err instanceof ReviewError) {
+      console.error(`error: ${err.message}`);
+      return 1;
+    }
+    throw err;
+  }
+}
+
 function usage() {
-  console.error('usage: agile-flow <init|status|next|resume> [options]');
+  console.error('usage: agile-flow <init|status|next|resume|sign> [options]');
   return 1;
 }
 
