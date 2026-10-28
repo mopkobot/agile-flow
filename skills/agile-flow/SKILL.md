@@ -108,7 +108,7 @@ A human waiver is legitimate only when the operator explicitly accepts the risk 
 
 ### 5. Build loop per story
 
-For each story, in priority order:
+For each story, always taking the highest-priority ready story first (lowest `priority:` number, then backlog rank). Never let a later story start while an earlier ready one is unbuilt:
 
 0. Claim the card for the developer: `node bin/agile-flow.mjs story <story-id> in-dev --role dev --agent <spawn-id>`, then `tracker sync` when a tracker is configured. The claim is what stops two agents building the same story.
 0b. Run `node bin/agile-flow.mjs check DoR-<story-id>`. The story becomes ready only after UX has supplied its wireframe, so DoR closes at the end of the UX phase. Exit 1 means it is not ready: send it back and do not build it.

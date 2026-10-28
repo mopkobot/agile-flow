@@ -65,3 +65,11 @@ test('the orchestrator asks brownfield operators to define a harness', async () 
     assert.ok(template.includes(heading), heading);
   }
 });
+
+test('dev always takes the highest-priority ready story', async () => {
+  const dev = await read('agile-dev');
+  assert.match(dev, /highest[- ]priority/i);
+  assert.match(dev, /refuse/i);
+  const flow = await read('agile-flow');
+  assert.match(flow, /highest[- ]priority/i);
+});
