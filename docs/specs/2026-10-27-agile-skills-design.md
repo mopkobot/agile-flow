@@ -300,6 +300,9 @@ Human-signed only. A waiver names the gate, the requirement waived, the reason, 
 | `sign <gate> --role <role> --verdict <v> --evidence <paths>` | Writes a review record after validating role and evidence | 0, 1 invalid |
 | `waive <gate> --reason <text> --expires <date> --approver human` | Records a human waiver | 0, 1 if approver is not human |
 | `guard <action> --question <text>` | Records a destructive-action escalation and exits blocked | 0 never, 1 blocked |
+| `story <id> <in-dev\|in-qa\|done>` | Claims a ready story for a role, enforcing transition order | 0, 1 conflict |
+| `tracker sync [--dry-run]` | Mirrors story status to GitHub issue labels | 0, 1 gh failure |
+| `setup-human` | Sets or rotates the human passphrase | 0, 1 |
 | `resume` | Clears an escalation only when the human supplies a resolution note | 0, 1 |
 
 The CLI never edits product code and never commits.

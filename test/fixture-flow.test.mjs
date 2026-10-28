@@ -6,6 +6,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { run } from '../src/cli.mjs';
 
+process.env.AGILE_HUMAN_PASSPHRASE ||= 'test-passphrase';
+
 function cleanEnv() {
   const env = { ...process.env };
   delete env.NODE_TEST_CONTEXT;

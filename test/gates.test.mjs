@@ -8,6 +8,8 @@ import { loadState } from '../src/state.mjs';
 import { run } from '../src/cli.mjs';
 import { seededRepo } from './helpers.mjs';
 
+process.env.AGILE_HUMAN_PASSPHRASE ||= 'test-passphrase';
+
 async function flowRepo({ profileCommand = 'true', stack = true } = {}) {
   const repo = await seededRepo();
   execFileSync('git', ['init', '-q'], { cwd: repo });

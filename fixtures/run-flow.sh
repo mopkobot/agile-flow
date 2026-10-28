@@ -10,6 +10,7 @@ CLI="$HERE/../bin/agile-flow.mjs"
 A="$REPO/docs/agile"
 
 cd "$REPO"
+export AGILE_HUMAN_PASSPHRASE="${AGILE_HUMAN_PASSPHRASE:-fixture-passphrase}"
 
 say() { printf '\n== %s ==\n' "$1"; }
 flow() { node "$CLI" "$@"; }
@@ -436,7 +437,8 @@ EOF
 commit "docs: close retro 01"
 
 say "verify"
-(cd "$REPO" && npm test >/dev/null)
+(cd "$REPO"
+export AGILE_HUMAN_PASSPHRASE="${AGILE_HUMAN_PASSPHRASE:-fixture-passphrase}" && npm test >/dev/null)
 node "$CLI" status
 
 echo

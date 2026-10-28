@@ -4,7 +4,7 @@ import { initFlow, loadState, saveState, StateError, GATES, agileDir } from './s
 import { detectStack, renderProfile } from './stack.mjs';
 import { nextAction, nextPhase, PHASES, GATE_AFTER } from './phases.mjs';
 import { recordReview, ReviewError } from './reviews.mjs';
-import { ROLE_SCOPE, checkBoundary, ignoredPaths } from './boundary.mjs';
+import { ROLE_SCOPE, checkBoundary, ignoredPaths, dorSignerScopes } from './boundary.mjs';
 import { checkGate, checkStoryReady } from './gates.mjs';
 import { addWaiver, WaiverError } from './waivers.mjs';
 import { validateSkillTree } from './skills.mjs';
@@ -19,7 +19,10 @@ function headSha(cwd) {
   }
 }
 
-export async function run(argv, cwd = process.cwd()) {
+let runEnv = process.env;
+
+export async function run(argv, cwd = process.cwd(), options = {}) {
+  runEnv = options.env ?? process.env;
   const [command, ...rest] = argv;
   try {
     switch (command) {
@@ -43,6 +46,12 @@ export async function run(argv, cwd = process.cwd()) {
         return await cmdAdvance(rest, cwd);
       case 'guard':
         return await cmdGuard(rest, cwd);
+      case 'setup-human':
+        return await cmdSetupHuman(cwd);
+      case 'story':
+        return await cmdStory(rest, cwd);
+      case 'tracker':
+        return await cmdTracker(rest, cwd);
       default:
         return usage();
     }
@@ -156,6 +165,23 @@ async function cmdResume(args, cwd) {
 
 async function cmdSign(args, cwd) {
   const gate = args[0];
+  const state = await loadState(cwd);
+  if (flag(args, 'role') === 'human') {
+    const { verifyPassphrase, resolvePassphrase } = await import('./auth.mjs');
+    if (!state.humanAuth) {
+      console.error('error: no human passphrase configured; run "agile-flow setup-human" in an interactive shell');
+      return 1;
+    }
+    const passphrase = await resolvePassphrase('Human passphrase: ');
+    if (!passphrase) {
+      console.error('error: human sign-off requires the passphrase; set AGILE_HUMAN_PASSPHRASE or run in an interactive terminal');
+      return 1;
+    }
+    if (!verifyPassphrase(passphrase, state.humanAuth)) {
+      console.error('error: human passphrase rejected');
+      return 1;
+    }
+  }
   const role = flag(args, 'role');
   const verdict = flag(args, 'verdict');
   const evidence = flag(args, 'evidence');
@@ -251,6 +277,61 @@ async function cmdGuard(args, cwd) {
   return 1;
 }
 
+async function cmdStory(args, cwd) {
+  const [id, status] = args;
+  const role = flag(args, 'role');
+  const agent = flag(args, 'agent');
+  if (!id || !status || !role) {
+    console.error('usage: agile-flow story <id> <in-dev|in-qa|done> --role <role> [--agent <name>]');
+    return 1;
+  }
+  const { setStoryStatus, StoryError } = await import('./stories.mjs');
+  try {
+    const story = await setStoryStatus(cwd, id, status, role, agent);
+    console.log(`${id} ${story.status} (${story.owner})`);
+    return 0;
+  } catch (err) {
+    if (err instanceof StoryError) {
+      console.error(`error: ${err.message}`);
+      return 1;
+    }
+    throw err;
+  }
+}
+
+async function cmdTracker(args, cwd) {
+  const sub = args[0];
+  if (sub !== 'sync') {
+    console.error('usage: agile-flow tracker sync [--dry-run]');
+    return 1;
+  }
+  const { syncGitHub, TrackerError } = await import('./tracker.mjs');
+  try {
+    await syncGitHub(cwd, { dryRun: args.includes('--dry-run'), env: runEnv });
+    return 0;
+  } catch (err) {
+    if (err instanceof TrackerError) {
+      console.error(`error: ${err.message}`);
+      return 1;
+    }
+    throw err;
+  }
+}
+
+async function cmdSetupHuman(cwd) {
+  const state = await loadState(cwd);
+  const { resolvePassphrase, hashPassphrase } = await import('./auth.mjs');
+  const passphrase = await resolvePassphrase('New human passphrase (min 8 chars): ');
+  if (!passphrase) {
+    console.error('error: no passphrase supplied; set AGILE_HUMAN_PASSPHRASE or run in an interactive terminal');
+    return 1;
+  }
+  state.humanAuth = hashPassphrase(passphrase);
+  await saveState(cwd, state);
+  console.log('human passphrase configured');
+  return 0;
+}
+
 async function cmdAdvance(args, cwd) {
   const state = await loadState(cwd);
   if (state.escalation) {
@@ -270,7 +351,15 @@ async function cmdAdvance(args, cwd) {
       return 1;
     }
   } else if (state.stageBase) {
-    const allowed = [...(state.writeScope ?? []), ...ROLE_SCOPE['agile-flow'], ...ROLE_SCOPE.human];
+    const { readdir } = await import('node:fs/promises');
+    const { join } = await import('node:path');
+    const reviewFiles = await readdir(join(cwd, 'docs/agile/reviews')).catch(() => []);
+    const allowed = [
+      ...(state.writeScope ?? []),
+      ...ROLE_SCOPE['agile-flow'],
+      ...ROLE_SCOPE.human,
+      ...dorSignerScopes(reviewFiles).flatMap((role) => ROLE_SCOPE[role] ?? []),
+    ];
     const boundary = await checkBoundary(cwd, allowed, state.stageBase, state.stageIgnored ?? []);
     if (!boundary.ok) {
       console.error('error: phase boundary violated');
@@ -308,7 +397,7 @@ function cmdSkills(cwd, args = []) {
 }
 
 function usage() {
-  console.error('usage: agile-flow <init|status|next|advance|guard|resume|sign|check|waive|skills> [options]');
+  console.error('usage: agile-flow <init|status|next|advance|guard|resume|sign|check|waive|skills|setup-human|story|tracker> [options]');
   return 1;
 }
 

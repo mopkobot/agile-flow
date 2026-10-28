@@ -59,6 +59,9 @@ agile-flow status
 agile-flow next
 agile-flow advance [--phase <phase>]
 agile-flow guard <push|force-push|deploy|migrate|rotate-secret|delete-data> --question <text>
+agile-flow story <id> <in-dev|in-qa|done> --role <role> [--agent <name>]
+agile-flow tracker sync [--dry-run]
+agile-flow setup-human
 agile-flow check <gate|DoR-<story-id>>
 agile-flow sign <gate> --role <role> --verdict pass|fail|pass-with-risk --evidence <paths>
 agile-flow waive <gate> [--requirement <text>] --reason <text> --expires YYYY-MM-DD --approver human
@@ -67,6 +70,10 @@ agile-flow skills
 ```
 
 Exit codes: `0` ok, `1` failure, `2` already initialized, `3` blocked.
+
+Story status is the claim mechanism for parallel agents. `in-dev` belongs to the dev role, `in-qa` to QA, `done` to the flow. A rejected transition means another agent owns the card. `tracker sync` mirrors status to GitHub issue labels (`status:ready`, `status:in-dev`, `status:in-qa`, `status:done`).
+
+Human sign-offs are authenticated with a passphrase hashed at `init` or `setup-human`. Set `AGILE_HUMAN_PASSPHRASE` for that command, or run it in an interactive terminal. An agent shell without the passphrase cannot sign as the human.
 
 Coverage: a command that enforces its own threshold (`--check-coverage`, `--cov-fail-under`, `--fail-under`) is trusted on exit code; otherwise the line coverage it reports must reach 80%. Point the command at changed-code coverage when the tool supports it.
 

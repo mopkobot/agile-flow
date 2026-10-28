@@ -139,3 +139,12 @@ export async function checkBoundary(root, writeScope, stageBase, ignoredBaseline
   const violations = paths.filter((path) => !matchesScope(path, writeScope));
   return { ok: violations.length === 0, violations, reason: null };
 }
+
+export function dorSignerScopes(reviewFiles) {
+  const roles = new Set();
+  for (const file of reviewFiles) {
+    const match = file.match(/^DoR-.+-(ba|ux|sre|tech-lead)\.yaml$/);
+    if (match) roles.add(`agile-${match[1]}`);
+  }
+  return [...roles];
+}

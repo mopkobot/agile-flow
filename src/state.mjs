@@ -70,6 +70,7 @@ export function freshState(mode) {
     waivers: [],
     escalation: null,
     stackDetected: false,
+    humanAuth: null,
   };
 }
 
@@ -89,6 +90,9 @@ export async function initFlow(root, mode) {
   }
   const state = freshState(mode);
   state.targetRepo = root;
+  const { resolvePassphrase, hashPassphrase } = await import('./auth.mjs');
+  const passphrase = await resolvePassphrase('Human passphrase (used to authenticate sign-offs): ');
+  if (passphrase) state.humanAuth = hashPassphrase(passphrase);
   await mkdir(agileDir(root), { recursive: true });
   await saveState(root, state);
   return { created: true, state };

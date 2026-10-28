@@ -8,6 +8,8 @@ import { run } from '../src/cli.mjs';
 import { loadState } from '../src/state.mjs';
 import { runChecks, validateTddEvidence } from '../src/gates.mjs';
 
+process.env.AGILE_HUMAN_PASSPHRASE ||= 'test-passphrase';
+
 async function repo(files = {}) {
   const dir = await mkdtemp(join(tmpdir(), 'af-gap-'));
   execFileSync('git', ['init', '-q'], { cwd: dir });

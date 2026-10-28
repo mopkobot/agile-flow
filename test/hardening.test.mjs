@@ -7,6 +7,8 @@ import { join } from 'node:path';
 import { run } from '../src/cli.mjs';
 import { checkBoundary } from '../src/boundary.mjs';
 
+process.env.AGILE_HUMAN_PASSPHRASE ||= 'test-passphrase';
+
 function git(repo, args) {
   return execFileSync('git', args, { cwd: repo, encoding: 'utf8' });
 }

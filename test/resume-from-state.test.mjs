@@ -8,6 +8,8 @@ import { run } from '../src/cli.mjs';
 import { loadState } from '../src/state.mjs';
 import { nextAction } from '../src/phases.mjs';
 
+process.env.AGILE_HUMAN_PASSPHRASE ||= 'test-passphrase';
+
 test('state.json alone is enough to resume after a restart', async () => {
   const repo = await mkdtemp(join(tmpdir(), 'af-resume-'));
   execFileSync('git', ['init', '-q'], { cwd: repo });

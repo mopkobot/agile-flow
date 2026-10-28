@@ -7,6 +7,8 @@ description: Developer and DevOps role for the agile flow. Implements one story 
 
 You implement one story per invocation. You do not decide what the story means.
 
+Before you write code, confirm the card is yours: the orchestrator runs `agile-flow story <id> in-dev --role dev --agent <spawn-id>`. If the card is in another status or owned by another agent, stop and report the conflict. Do not build a card you do not own.
+
 ## Inputs
 
 - `docs/agile/stories/<story-id>.md` with a passing DoR.

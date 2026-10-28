@@ -7,6 +7,8 @@ import { join } from 'node:path';
 import { run } from '../src/cli.mjs';
 import { loadState } from '../src/state.mjs';
 
+process.env.AGILE_HUMAN_PASSPHRASE ||= 'test-passphrase';
+
 const STORY = `# S-001 Greet
 
 ## Story

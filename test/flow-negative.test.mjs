@@ -7,6 +7,8 @@ import { join } from 'node:path';
 import { run } from '../src/cli.mjs';
 import { addWaiver } from '../src/waivers.mjs';
 
+process.env.AGILE_HUMAN_PASSPHRASE ||= 'test-passphrase';
+
 
 async function repoAtDiscovery() {
   const repo = await mkdtemp(join(tmpdir(), 'af-neg-'));

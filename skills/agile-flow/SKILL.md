@@ -37,6 +37,7 @@ must_not:
 - Edit product code or commit on behalf of a role.
 - Advance a phase because the work "looks done". Only `check` exit 0 advances a gate.
 - Spawn a role outside its phase, or let one role do another's work.
+- Let two agents work the same story. The `story` command is the claim, and a rejected transition means another agent owns it.
 
 handoff:
 - Product decisions, priority, release scope -> `agile-po`
@@ -99,13 +100,15 @@ A human waiver is legitimate only when the operator explicitly accepts the risk 
 
 For each story, in priority order:
 
-0. Run `node bin/agile-flow.mjs check DoR-<story-id>`. The story becomes ready only after UX has supplied its wireframe, so DoR closes at the end of the UX phase. Exit 1 means it is not ready: send it back and do not build it.
+0. Claim the card for the developer: `node bin/agile-flow.mjs story <story-id> in-dev --role dev --agent <spawn-id>`, then `tracker sync` when a tracker is configured. The claim is what stops two agents building the same story.
+0b. Run `node bin/agile-flow.mjs check DoR-<story-id>`. The story becomes ready only after UX has supplied its wireframe, so DoR closes at the end of the UX phase. Exit 1 means it is not ready: send it back and do not build it.
 1. Spawn `agile-tech-lead` to write `docs/agile/build/<story-id>/plan.md` with the file list, seams, and test list.
 2. Spawn `agile-dev` in test-author mode. It writes failing tests and `red.log`. A `red.log` with zero failures is a failure; escalate rather than continue.
 3. Spawn `agile-dev` in implementer mode. It writes the minimum code and `green.log`.
 4. Spawn `agile-dev` in reviewer mode to write `review.md`. The reviewer must not be the implementer.
 5. Run the stack test command. Commit on trunk in small slices.
-6. Spawn `agile-qa` for story evidence, then evaluate DoD from `templates/checklists.md`.
+6. Hand the card to QA: `story <story-id> in-qa --role qa`, then `tracker sync`. Spawn `agile-qa` for story evidence, then evaluate DoD from `templates/checklists.md`.
+7. When G3 closes, mark the card done: `story <story-id> done --role flow`, then `tracker sync`.
 
 ### 6. Ceremonies
 
