@@ -57,6 +57,14 @@ Run `node bin/agile-flow.mjs status`.
 - No state: ask for the repository path and whether it is greenfield or brownfield. Then run `init --repo <path> --mode <mode>`.
 - State present: read `phase`, `gates`, `escalation`, `waivers`. Resume at `phase`.
 
+After initializing a **brownfield** repository, run `node bin/agile-flow.mjs harness`. If it reports gaps, ask the operator one question before any discovery work:
+
+> This repository has no AI development harness. Want me to define one first? It covers product context, architecture boundaries, reliability signals, and the agent rules and commands, which makes every later agent step faster and less error-prone.
+
+If the operator says yes, spawn `agile-po` for product context, `agile-architect` for architecture and boundaries, and `agile-sre` for reliability signals. Write their answers into `docs/agile/harness.md` from `templates/harness.md`. Hand the agent-command section to `agile-dev` to write `AGENTS.md`, reviewed by `agile-tech-lead`. Do not start discovery until the harness exists or the operator explicitly declines.
+
+On a greenfield repository, write the same harness during discovery, before G0, because the flow will need those rules from the first story.
+
 If `status` reports an escalation, stop and put the escalation question to the operator. Run `resume --note <resolution>` only after they answer.
 
 ### 2. Ask the CLI what happens next

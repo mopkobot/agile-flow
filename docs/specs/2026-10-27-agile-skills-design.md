@@ -135,7 +135,7 @@ intake → discovery → shaping → ux → architecture → planning
 
 | Phase | Entry | Exit artifact | Gate | Signers |
 |---|---|---|---|---|
-| intake | Repo named by operator | `stack-profile.md` | none | orchestrator |
+| intake | Repo named by operator | `stack-profile.md`, `harness.md` on brownfield | none | orchestrator, with PO, architect, SRE, dev contributions |
 | discovery | Stack profile | `vision.md`, `personas.md`, `success-metrics.md`, `backlog.md` | G0 | PO + human |
 | shaping | Backlog outline | `stories/<id>.md` | none yet | BA |
 | ux | Stories | `ux/flows.md`, `ux/tokens.json`, `ux/wireframes/<id>.html` | DoR per story after UX | BA, UX, SRE, tech lead, PO |
@@ -147,7 +147,7 @@ intake → discovery → shaping → ux → architecture → planning
 | operations | G3 green | `operations/` complete, load test recorded | G4 | SRE |
 | retro | Operations green | `retro/retro-NN.md` with actions | none | orchestrator + all roles |
 
-Brownfield adds a legacy assessment to discovery: inventory of existing modules, test coverage baseline, debt register seed, and risks. The assessment feeds architecture and shaping.
+Brownfield first asks whether to define an AI development harness (product context, architecture boundaries, reliability signals, agent rules and commands) in `harness.md`, then adds a legacy assessment to discovery: inventory of existing modules, test coverage baseline, debt register seed, and risks. The assessment feeds architecture and shaping.
 
 After retro, the loop re-enters shaping with retro actions and remaining backlog items. The sprint number increments.
 
@@ -304,6 +304,7 @@ Human-signed only. A waiver names the gate, the requirement waived, the reason, 
 | `story <id> <in-dev\|in-qa\|done>` | Claims a ready story for a role, enforcing transition order | 0, 1 conflict |
 | `tracker sync [--dry-run]` | Mirrors story status to GitHub issue labels | 0, 1 gh failure |
 | `setup-human` | Sets or rotates the human passphrase | 0, 1 |
+| `harness` | Reports present and missing AI-harness elements, with a fix per gap | 0 complete, 1 gaps |
 | `audit sample` | Prints citable claims sampled for verification | 0, 1 |
 | `audit record` | Records a passing or failing audit for a gate | 0, 1 |
 | `resume` | Clears an escalation only when the human supplies a resolution note | 0, 1 |

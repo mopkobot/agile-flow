@@ -8,6 +8,7 @@ import { ROLE_SCOPE, checkBoundary, ignoredPaths, dorSignerScopes } from './boun
 import { checkGate, checkStoryReady } from './gates.mjs';
 import { addWaiver, WaiverError } from './waivers.mjs';
 import { validateSkillTree } from './skills.mjs';
+import { detectHarness } from './harness.mjs';
 import { readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 
@@ -54,6 +55,8 @@ export async function run(argv, cwd = process.cwd(), options = {}) {
         return await cmdTracker(rest, cwd);
       case 'audit':
         return await cmdAudit(rest, cwd);
+      case 'harness':
+        return cmdHarness(cwd);
       default:
         return usage();
     }
@@ -279,6 +282,21 @@ async function cmdGuard(args, cwd) {
   return 1;
 }
 
+function cmdHarness(cwd) {
+  const result = detectHarness(cwd);
+  for (const item of result.present) console.log(`present: ${item}`);
+  for (const gap of result.fixes) {
+    console.log(`missing: ${gap.gap}`);
+    console.log(`  fix: ${gap.fix}`);
+  }
+  if (result.missing.length === 0) {
+    console.log('harness complete');
+    return 0;
+  }
+  console.log(`harness gaps: ${result.missing.length}`);
+  return 1;
+}
+
 async function cmdAudit(args, cwd) {
   const sub = args[0];
   const { listClaims, recordAudit } = await import('./audit.mjs');
@@ -434,7 +452,7 @@ function cmdSkills(cwd, args = []) {
 }
 
 function usage() {
-  console.error('usage: agile-flow <init|status|next|advance|guard|resume|sign|check|waive|skills|setup-human|story|tracker|audit> [options]');
+  console.error('usage: agile-flow <init|status|next|advance|guard|resume|sign|check|waive|skills|setup-human|story|tracker|audit|harness> [options]');
   return 1;
 }
 

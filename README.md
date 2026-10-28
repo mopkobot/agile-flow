@@ -46,6 +46,7 @@ intake -> discovery [G0] -> shaping -> ux -> architecture [G1] -> planning [G2]
 ```
 
 - **DoR story**: story template, four shaping sign-offs (BA, UX, SRE, tech lead), wireframe present, no blocking open question. Checked with `agile-flow check DoR-<id>` after UX.
+- **Harness (brownfield first)**: product, architecture, reliability, agent rules, commands. `agile-flow harness` lists gaps. The orchestrator asks whether to define one before discovery.
 - **G0 scope**: vision, personas, metrics, backlog. PO and human.
 - **G1 design**: architecture, ADRs, NFRs, fitness functions, threat model, glossary, UX, tech-lead review. Architect, tech lead, UX, human.
 - **G2 plan**: sprint scope. Human.
@@ -65,6 +66,7 @@ agile-flow tracker sync [--dry-run]
 agile-flow setup-human
 agile-flow audit sample [--count <n>]
 agile-flow audit record --gate <G3|G4> --verdict pass|fail --checked <n> --note <text>
+agile-flow harness
 agile-flow check <gate|DoR-<story-id>>
 agile-flow sign <gate> --role <role> --verdict pass|fail|pass-with-risk --evidence <paths>
 agile-flow waive <gate> [--requirement <text>] --reason <text> --expires YYYY-MM-DD --approver human

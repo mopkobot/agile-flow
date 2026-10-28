@@ -54,3 +54,14 @@ test('the tech lead owns the build plan, not the developer', async () => {
   assert.match(dev, /plan\.md.*from the tech lead/i);
   assert.match(flow, /Spawn `agile-tech-lead` to write `docs\/agile\/build\/<story-id>\/plan\.md`/);
 });
+
+test('the orchestrator asks brownfield operators to define a harness', async () => {
+  const flow = await read('agile-flow');
+  assert.match(flow, /brownfield/i);
+  assert.match(flow, /harness/i);
+  assert.match(flow, /ask the operator/i);
+  const template = await readFile(join(root, '..', 'templates', 'harness.md'), 'utf8');
+  for (const heading of ['## Product context', '## Architecture context', '## Reliability', '## Agent rules', '## Verification']) {
+    assert.ok(template.includes(heading), heading);
+  }
+});
