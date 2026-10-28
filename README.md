@@ -17,6 +17,7 @@ The flow produces a working increment, not a ceremony transcript. Every phase le
 | `agile-dev` | Developer and DevOps | TDD loop, trunk commits, CI, IaC, observability |
 | `agile-qa` | Quality analyst | Test strategy, exploratory, a11y, defects |
 | `agile-sre` | SRE | SLOs, runbooks, alerts, load tests, postmortems |
+| `agile-auditor` | Auditor | Independent claim sampling at G3 and G4 |
 
 ## Install
 
@@ -62,6 +63,8 @@ agile-flow guard <push|force-push|deploy|migrate|rotate-secret|delete-data> --qu
 agile-flow story <id> <in-dev|in-qa|done> --role <role> [--agent <name>]
 agile-flow tracker sync [--dry-run]
 agile-flow setup-human
+agile-flow audit sample [--count <n>]
+agile-flow audit record --gate <G3|G4> --verdict pass|fail --checked <n> --note <text>
 agile-flow check <gate|DoR-<story-id>>
 agile-flow sign <gate> --role <role> --verdict pass|fail|pass-with-risk --evidence <paths>
 agile-flow waive <gate> [--requirement <text>] --reason <text> --expires YYYY-MM-DD --approver human

@@ -71,6 +71,7 @@ export function freshState(mode) {
     escalation: null,
     stackDetected: false,
     humanAuth: null,
+    audits: {},
   };
 }
 

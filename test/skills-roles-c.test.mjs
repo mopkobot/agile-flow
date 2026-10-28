@@ -6,10 +6,11 @@ import { validateSkillTree } from '../src/skills.mjs';
 
 const root = join(import.meta.dirname, '..', 'skills');
 
-test('all nine skills validate and are present', async () => {
+test('all ten skills validate and are present', async () => {
   const names = (await readdir(root)).sort();
   assert.deepEqual(names, [
     'agile-architect',
+    'agile-auditor',
     'agile-ba',
     'agile-dev',
     'agile-flow',

@@ -110,6 +110,12 @@ For each story, in priority order:
 6. Hand the card to QA: `story <story-id> in-qa --role qa`, then `tracker sync`. Spawn `agile-qa` for story evidence, then evaluate DoD from `templates/checklists.md`.
 7. When G3 closes, mark the card done: `story <story-id> done --role flow`, then `tracker sync`.
 
+### 5b. Audit before release
+
+At G3 and G4, spawn `agile-auditor` fresh. It runs `audit sample`, verifies the citations against the code, and records the result with `audit record`. The gate refuses without a passing audit record.
+
+The auditor must not be a role that authored the artifacts it checks. If it is, spawn another and say why.
+
 ### 6. Ceremonies
 
 - Sprint planning, in the planning phase: `agile-po` proposes scope from priority order; write `plan/sprint-<NN>.md`; gate G2 requires the human.

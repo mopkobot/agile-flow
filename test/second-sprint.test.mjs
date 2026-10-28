@@ -99,18 +99,26 @@ dependencies: none
   await put(repo, 'build/S-002/plan.md', '# plan\n\nFiles: src/app.mjs.\n');
   await put(repo, 'build/S-002/red.log', '$ node --test\n# fail 2\n');
   await put(repo, 'build/S-002/green.log', '$ node --test\n# fail 0\n');
-  await put(repo, 'build/S-002/review.md', '# Review\n\n## Verdict\npass\n\nreviewer: reviewer-spawn\nimplementer: implementer-spawn\n');
+  await put(repo, 'build/S-002/review.md', '# Review\n\n## Verdict\npass\n\nreviewer: reviewer-spawn\nimplementer: implementer-spawn\n\n## Findings\n- src/app.mjs:1 tidy. No findings.\n');
+
   commit(repo, 'feat: S-002');
 
-  for (const phase of ['quality', 'release']) {
-    assert.equal(await run(['advance'], repo), 0, phase);
-    await run(['next'], repo);
-  }
+  assert.equal(await run(['advance'], repo), 0, 'quality');
+  await run(['next'], repo);
+  await put(repo, 'quality/evidence/S-002.md', '# Evidence\n\n```\n$ npm test\n# pass 8\n```\n');
+  commit(repo, 'docs: quality S-002');
 
+  assert.equal(await run(['advance'], repo), 0, 'release');
+  await run(['next'], repo);
+
+  assert.equal(await run(['check', 'G3'], repo), 1);
+  assert.equal(await run(['audit', 'record', '--gate', 'G3', '--verdict', 'pass', '--checked', '2', '--note', 'sprint 2 sample'], repo), 0);
   assert.equal(await run(['check', 'G3'], repo), 0);
   commit(repo, 'docs: release sprint 02');
   assert.equal(await run(['advance'], repo), 0);
   await run(['next'], repo);
+  assert.equal(await run(['check', 'G4'], repo), 1);
+  assert.equal(await run(['audit', 'record', '--gate', 'G4', '--verdict', 'pass', '--checked', '1', '--note', 'sprint 2 ops'], repo), 0);
   assert.equal(await run(['check', 'G4'], repo), 0);
   assert.equal(await run(['advance'], repo), 0);
   await run(['next'], repo);

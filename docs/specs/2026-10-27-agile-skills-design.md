@@ -82,6 +82,7 @@ Each role is a skill loaded by a subagent spawned by the orchestrator. A role re
 | `agile-dev` | TDD inner loop, trunk commits, CI pipeline, IaC, observability hooks | Build complete per story |
 | `agile-qa` | Test strategy, pyramid coverage, exploratory testing, a11y, perf, security evidence, defects | None at G3; supplies the evidence the PO signs against |
 | `agile-sre` | SLOs, error budgets, runbooks, dashboards and alerts as code, load tests, incident process | Supportability at G3 and G4 |
+| `agile-auditor` | Samples claims at G3 and G4, reproduces or falsifies each, records an audit | None; audit record only |
 
 ### 4.1 Story shaping
 
@@ -303,6 +304,8 @@ Human-signed only. A waiver names the gate, the requirement waived, the reason, 
 | `story <id> <in-dev\|in-qa\|done>` | Claims a ready story for a role, enforcing transition order | 0, 1 conflict |
 | `tracker sync [--dry-run]` | Mirrors story status to GitHub issue labels | 0, 1 gh failure |
 | `setup-human` | Sets or rotates the human passphrase | 0, 1 |
+| `audit sample` | Prints citable claims sampled for verification | 0, 1 |
+| `audit record` | Records a passing or failing audit for a gate | 0, 1 |
 | `resume` | Clears an escalation only when the human supplies a resolution note | 0, 1 |
 
 The CLI never edits product code and never commits.

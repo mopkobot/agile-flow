@@ -12,6 +12,7 @@ export const ROLE_SCOPE = {
     'docs/agile/release/**',
   ],
   human: ['docs/agile/reviews/*-human.yaml'],
+  'agile-auditor': ['docs/agile/audits/**'],
   'agile-po': [
     'docs/agile/vision.md',
     'docs/agile/personas.md',

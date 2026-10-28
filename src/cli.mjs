@@ -52,6 +52,8 @@ export async function run(argv, cwd = process.cwd(), options = {}) {
         return await cmdStory(rest, cwd);
       case 'tracker':
         return await cmdTracker(rest, cwd);
+      case 'audit':
+        return await cmdAudit(rest, cwd);
       default:
         return usage();
     }
@@ -277,6 +279,41 @@ async function cmdGuard(args, cwd) {
   return 1;
 }
 
+async function cmdAudit(args, cwd) {
+  const sub = args[0];
+  const { listClaims, recordAudit } = await import('./audit.mjs');
+  if (sub === 'sample') {
+    const count = Number(flag(args, 'count') ?? 5);
+    const claims = await listClaims(cwd, count);
+    if (claims.length === 0) {
+      console.error('error: no citable claims found');
+      return 1;
+    }
+    for (const claim of claims) console.log(claim);
+    return 0;
+  }
+  if (sub === 'record') {
+    const gate = flag(args, 'gate');
+    const verdict = flag(args, 'verdict');
+    const checked = Number(flag(args, 'checked'));
+    const note = flag(args, 'note');
+    if (!gate || !verdict || !note) {
+      console.error('usage: agile-flow audit record --gate <gate> --verdict pass|fail --checked <n> --note <text>');
+      return 1;
+    }
+    try {
+      await recordAudit(cwd, { gate, verdict, checked, note });
+      console.log(`audit recorded for ${gate}`);
+      return 0;
+    } catch (err) {
+      console.error(`error: ${err.message}`);
+      return 1;
+    }
+  }
+  console.error('usage: agile-flow audit <sample|record> [options]');
+  return 1;
+}
+
 async function cmdStory(args, cwd) {
   const [id, status] = args;
   const role = flag(args, 'role');
@@ -397,7 +434,7 @@ function cmdSkills(cwd, args = []) {
 }
 
 function usage() {
-  console.error('usage: agile-flow <init|status|next|advance|guard|resume|sign|check|waive|skills|setup-human|story|tracker> [options]');
+  console.error('usage: agile-flow <init|status|next|advance|guard|resume|sign|check|waive|skills|setup-human|story|tracker|audit> [options]');
   return 1;
 }
 

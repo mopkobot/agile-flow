@@ -71,7 +71,7 @@ Ratio guidance, not a rule: many unit tests, fewer integration tests, few E2E te
 
 ### Story evidence
 
-For each story at DoD, write `quality/evidence/<story-id>.md`:
+For each story at DoD, write `quality/evidence/<story-id>.md`. It must contain at least one executed command in a fenced block beginning with `$ `, with its real output, because the gate rejects evidence with no command:
 
 - Criterion-by-criterion result: passed, failed, or not testable, with evidence.
 - Edge cases exercised beyond the written criteria.

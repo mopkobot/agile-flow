@@ -247,6 +247,60 @@ export async function runChecks(root, profile, names = ['test', 'coverage', 'lin
   return { ok: results.every((r) => r.ok), results };
 }
 
+export async function validateReviewClaims(root, rel) {
+  const failures = [];
+  const text = await readFile(join(agileDir(root), rel), 'utf8');
+  const verdict = sectionBody(text, '## Verdict');
+  const findings = sectionBody(text, '## Findings');
+  const lines = findings.split('\n').filter((l) => /^-\s+/.test(l) && !/^-\s+none\s*$/i.test(l));
+
+  if (/^fail/i.test(verdict) && lines.length === 0) {
+    failures.push(`failing verdict needs a cited finding: docs/agile/${rel}`);
+    return failures;
+  }
+
+  for (const line of lines) {
+    const match = line.match(/([\w./-]+\.\w+):(\d+)/);
+    if (!match) {
+      failures.push(`finding lacks a path:line citation: docs/agile/${rel} :: ${line.trim()}`);
+      continue;
+    }
+    const [, file, lineNumber] = match;
+    let content;
+    try {
+      content = await readFile(join(root, file), 'utf8');
+    } catch {
+      failures.push(`cited file does not exist: ${file} (docs/agile/${rel})`);
+      continue;
+    }
+    const total = content.split('\n').length;
+    if (Number(lineNumber) > total) {
+      failures.push(`cited line ${lineNumber} is past end of ${file} (${total} lines) in docs/agile/${rel}`);
+    }
+  }
+  return failures;
+}
+
+export async function validateQaEvidence(root, rel) {
+  const text = await readFile(join(agileDir(root), rel), 'utf8');
+  const hasCommand = /^\$\s+\S+/m.test(text);
+  return hasCommand ? [] : [`qa evidence has no executed command: docs/agile/${rel}`];
+}
+
+export async function validateNfrMeasurements(root) {
+  const failures = [];
+  const text = await readFile(join(agileDir(root), 'architecture/nfrs.md'), 'utf8');
+  const body = sectionBody(text, '## NFRs');
+  const rows = body.split('\n').filter((l) => /^\|/.test(l) && !/^\|\s*-/.test(l));
+  for (const row of rows.slice(1)) {
+    const cells = row.split('|').map((c) => c.trim()).filter((c) => c !== '');
+    if (cells.length < 4 || !cells[2]) {
+      failures.push(`NFR row names no measurement: ${row.trim()}`);
+    }
+  }
+  return failures;
+}
+
 const STORY_HEADINGS = [
   '## Story',
   '## Acceptance criteria',
@@ -325,9 +379,26 @@ export async function checkGate(root, gate) {
   const failures = [];
 
   failures.push(...(await validateArtifacts(root, def.artifacts)));
+  if (gate === 'G1') {
+    failures.push(...(await validateNfrMeasurements(root)));
+  }
   if (gate === 'G3') {
     failures.push(...(await validateTddEvidence(root)));
     failures.push(...(await validateStoryLinkage(root, state)));
+    for (const rel of await expandArtifacts(root, 'build/*/review.md')) {
+      failures.push(...(await validateReviewClaims(root, rel)));
+    }
+    const evidence = await expandArtifacts(root, 'quality/evidence/*.md');
+    if (evidence.length === 0) failures.push('no QA evidence files under docs/agile/quality/evidence/');
+    for (const rel of evidence) {
+      failures.push(...(await validateQaEvidence(root, rel)));
+    }
+    const { validateAudit } = await import('./audit.mjs');
+    if (!(await validateAudit(root, 'G3'))) failures.push('audit record missing for G3');
+  }
+  if (gate === 'G4') {
+    const { validateAudit } = await import('./audit.mjs');
+    if (!(await validateAudit(root, 'G4'))) failures.push('audit record missing for G4');
   }
 
   const profile = await loadProfile(root);

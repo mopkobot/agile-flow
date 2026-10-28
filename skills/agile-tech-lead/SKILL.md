@@ -96,7 +96,9 @@ Rules:
 
 You review every story's code. Review is not a formality and not a style preference: it is how the codebase stays changeable.
 
-Write `build/<story-id>/review.md` with `## Verdict`, one of `pass`, `fail`, `pass-with-risk`, and the required `reviewer:` and `implementer:` identity lines.
+Write `build/<story-id>/review.md` with `## Verdict`, one of `pass`, `fail`, `pass-with-risk`, the required `reviewer:` and `implementer:` identity lines, and a `## Findings` section.
+
+Every finding cites `path:line` and the code it names. A failing verdict needs at least one cited finding. Write `- none` only when the review found nothing, and never to avoid looking.
 
 #### Correctness
 

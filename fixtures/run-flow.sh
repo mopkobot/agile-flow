@@ -320,9 +320,9 @@ pass
 reviewer: reviewer-spawn
 implementer: implementer-spawn
 
-- Each criterion has a failing-first test.
-- No duplicated rule.
-- No new dependency.
+## Findings
+- src/app.mjs:1 handler maps the URL; no duplication found.
+
 EOF
 commit "feat: build S-001"
 flow advance >/dev/null
@@ -337,6 +337,16 @@ put "$A/quality/test-strategy.md" <<'EOF'
 - Integration: handler status codes.
 - E2E: none; the handler is the system boundary.
 - Risks: unicode, concurrency, input size.
+EOF
+mkdir -p "$A/quality/evidence"
+put "$A/quality/evidence/S-001.md" <<'EOF'
+# Evidence S-001
+
+```
+$ npm test
+# pass 8
+# fail 0
+```
 EOF
 put "$A/quality/defects.md" <<'EOF'
 # Defects
@@ -388,6 +398,7 @@ sign G3 tech-lead docs/agile/build/S-001/review.md
 sign G3 architect docs/agile/architecture/nfrs.md
 sign G3 sre docs/agile/operations/slos.md,docs/agile/operations/load-test.md
 sign G3 human docs/agile/quality/test-strategy.md --note "operator approved release"
+flow audit record --gate G3 --verdict pass --checked 2 --note "spot-checked review and evidence"
 flow check G3
 commit "docs: close G3 release"
 flow advance >/dev/null
@@ -411,6 +422,7 @@ put "$A/operations/dashboards/greet.json" <<'EOF'
 { "title": "greet", "panels": ["latency", "traffic", "errors", "saturation"] }
 EOF
 sign G4 sre docs/agile/operations/slos.md
+flow audit record --gate G4 --verdict pass --checked 1 --note "spot-checked SLO and runbook"
 flow check G4
 commit "docs: close G4 operations"
 flow advance >/dev/null
