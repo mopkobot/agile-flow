@@ -2,7 +2,7 @@
 
 This repository is a policy engine, not an app. Two things must stay true after every change: the skills describe a workflow a competent team could actually follow, and the CLI enforces the parts of that workflow that can be checked mechanically.
 
-Read `README.md` for the product, `CONTRIBUTING.md` for the change rules, and `SECURITY.md` before touching identity, gates, or the tracker.
+Read `README.md` for the product, `docs/product.md` for who it serves and what it will not do, `CONTRIBUTING.md` for the change rules, and `SECURITY.md` before touching identity, gates, or the tracker.
 
 ## Non-negotiables
 
