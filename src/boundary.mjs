@@ -21,7 +21,7 @@ export const ROLE_SCOPE = {
     'docs/agile/reviews/G3-po.yaml',
   ],
   'agile-ba': ['docs/agile/stories/**', 'docs/agile/refinements/**', 'docs/agile/reviews/DoR-*.yaml'],
-  'agile-ux': ['docs/agile/ux/**', 'docs/agile/reviews/G1-ux.yaml'],
+  'agile-ux': ['docs/agile/ux/**', 'docs/agile/reviews/G1-ux.yaml', 'docs/agile/reviews/DoR-*-ux.yaml'],
   'agile-architect': [
     'docs/agile/architecture/**',
     'docs/agile/reviews/G1-architect.yaml',
@@ -33,6 +33,7 @@ export const ROLE_SCOPE = {
     'docs/agile/build/**/review.md',
     'docs/agile/reviews/G1-tech-lead.yaml',
     'docs/agile/reviews/G3-tech-lead.yaml',
+    'docs/agile/reviews/DoR-*-tech-lead.yaml',
   ],
   'agile-dev': [
     'src/**',
@@ -50,6 +51,7 @@ export const ROLE_SCOPE = {
     'docs/agile/operations/**',
     'docs/agile/reviews/G3-sre.yaml',
     'docs/agile/reviews/G4-sre.yaml',
+    'docs/agile/reviews/DoR-*-sre.yaml',
     'infra/observability/**',
   ],
 };

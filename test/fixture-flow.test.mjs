@@ -69,6 +69,7 @@ test('the full flow reaches retro with every gate passed', async () => {
   const state = JSON.parse(await readFile(join(repo, 'docs/agile/state.json'), 'utf8'));
   assert.equal(state.phase, 'retro');
   for (const gate of ['G0', 'G1', 'G2', 'G3', 'G4']) assert.equal(state.gates[gate].status, 'pass', gate);
+  assert.equal(state.stories['S-001'].dod, 'pass');
 });
 
 test('the brownfield flow records a legacy assessment before build', async () => {
@@ -80,4 +81,14 @@ test('the brownfield flow records a legacy assessment before build', async () =>
   const state = JSON.parse(await readFile(join(repo, 'docs/agile/state.json'), 'utf8'));
   assert.equal(state.mode, 'brownfield');
   assert.equal(state.phase, 'retro');
+});
+
+test('retro returns the flow to shaping for the next sprint', async () => {
+  const repo = await copyFixture();
+  const script = join(import.meta.dirname, '..', 'fixtures', 'run-flow.sh');
+  execFileSync('bash', [script, repo], { cwd: repo, stdio: 'pipe', env: cleanEnv(), timeout: 300_000 });
+  assert.equal(await run(['advance'], repo), 0);
+  const state = JSON.parse(await readFile(join(repo, 'docs/agile/state.json'), 'utf8'));
+  assert.equal(state.phase, 'shaping');
+  assert.equal(state.sprint, 2);
 });

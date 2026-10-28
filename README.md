@@ -44,6 +44,7 @@ intake -> discovery [G0] -> shaping -> ux -> architecture [G1] -> planning [G2]
        -> shaping (next sprint)
 ```
 
+- **DoR story**: story template, four shaping sign-offs (BA, UX, SRE, tech lead), wireframe present, no blocking open question. Checked with `agile-flow check DoR-<id>` after UX.
 - **G0 scope**: vision, personas, metrics, backlog. PO and human.
 - **G1 design**: architecture, ADRs, NFRs, fitness functions, UX, tech-lead review. Architect, tech lead, UX, human.
 - **G2 plan**: sprint scope. Human.
@@ -58,7 +59,7 @@ agile-flow status
 agile-flow next
 agile-flow advance [--phase <phase>]
 agile-flow guard <push|force-push|deploy|migrate|rotate-secret|delete-data> --question <text>
-agile-flow check <gate>
+agile-flow check <gate|DoR-<story-id>>
 agile-flow sign <gate> --role <role> --verdict pass|fail|pass-with-risk --evidence <paths>
 agile-flow waive <gate> [--requirement <text>] --reason <text> --expires YYYY-MM-DD --approver human
 agile-flow resume --note <resolution>

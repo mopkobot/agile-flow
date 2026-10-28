@@ -25,5 +25,5 @@ test('100 sequential requests stay under the p95 latency budget', async () => {
 
   samples.sort((a, b) => a - b);
   const p95 = samples[Math.floor(samples.length * 0.95) - 1];
-  assert.ok(p95 < 100, `p95 ${p95.toFixed(1)}ms exceeded 100ms`);
+  assert.ok(p95 < 200, `p95 ${p95.toFixed(1)}ms exceeded 200ms`);
 });

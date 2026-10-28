@@ -55,7 +55,7 @@ Out of scope:
 | E5 | Story format | Tracer bullet, persona story, Given/When/Then, non-goals, test plan, wireframes, open questions, NFRs |
 | F1 | Stack | Stack-agnostic with detection; opinionated defaults only when greenfield and undetectable |
 | F2 | Practices | Mandatory: TDD, trunk-based, CI on push, ADRs, fitness functions, testing pyramid, IaC, observability by default, blameless postmortem |
-| F3 | Advisory practices | Tech radar, DDD tactical patterns |
+| F3 | Advisory practices | DDD tactical patterns |
 | F4 | Enforcement | Executable checks where possible; signed review records otherwise |
 | F5 | TDD split | Separate test-author and implementer subagents |
 | F6 | UX depth | Research, flows, tokens, static HTML wireframes attached to stories |
@@ -136,8 +136,8 @@ intake → discovery → shaping → ux → architecture → planning
 |---|---|---|---|---|
 | intake | Repo named by operator | `stack-profile.md` | none | orchestrator |
 | discovery | Stack profile | `vision.md`, `personas.md`, `success-metrics.md`, `backlog.md` | G0 | PO + human |
-| shaping | Backlog outline | `stories/<id>.md` with DoR | DoR per story | BA, UX, SRE, tech lead, PO |
-| ux | Ready stories | `ux/flows.md`, `ux/tokens.json`, `ux/wireframes/<id>.html` | folded into G1 | UX |
+| shaping | Backlog outline | `stories/<id>.md` | none yet | BA |
+| ux | Stories | `ux/flows.md`, `ux/tokens.json`, `ux/wireframes/<id>.html` | DoR per story after UX | BA, UX, SRE, tech lead, PO |
 | architecture | Ready stories, UX flows | `architecture/system.md`, `nfrs.md`, `fitness-functions.md`, `c4/`, `adrs/` | G1 | architect, tech lead, UX + human |
 | planning | G1 green | `plan/sprint-NN.md` | G2 | human |
 | build | G2 green | `build/<story-id>/` plus commits | DoD per story | dev, reviewer, QA |
@@ -188,7 +188,7 @@ docs/agile/
   backlog.md  stories/<id>.md  refinements/
   ux/flows.md  ux/tokens.json  ux/usability-notes.md  ux/wireframes/<id>.html
   architecture/system.md  architecture/nfrs.md  architecture/fitness-functions.md
-  architecture/c4/  architecture/adrs/NNNN-<slug>.md  architecture/glossary.md
+  architecture/c4/  architecture/adrs/NNNN-<slug>.md  architecture/glossary.md  architecture/threat-model.md
   plan/sprint-NN.md
   build/<story-id>/{plan.md,red.log,green.log,review.md}
   quality/{test-strategy.md,defects.md,evidence/}
@@ -373,7 +373,6 @@ Done: AC verified by test, changed-code coverage ≥ 80% (enforced by the tool's
 | IaC | release, G4 | Infrastructure declared as code or explicitly not applicable with reason |
 | Observability by default | DoD, G4 | Hooks present per story; dashboards and alerts as code |
 | Blameless postmortem | operations, retro | Template requires timeline, causes, actions, no names |
-| Tech radar | advisory | Mentioned in architecture notes only |
 | DDD tactical patterns | advisory | Mentioned in architecture notes only |
 
 ## 13. Validation plan

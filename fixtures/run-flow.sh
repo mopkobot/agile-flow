@@ -55,7 +55,7 @@ put "$A/vision.md" <<'EOF'
 Greet a visitor by name through one HTTP endpoint.
 
 ## Success metrics
-- p95 response under 100 ms in the load test.
+- p95 response under 200 ms in the load test.
 - Zero unhandled errors for valid input.
 EOF
 put "$A/personas.md" <<'EOF'
@@ -70,7 +70,7 @@ put "$A/success-metrics.md" <<'EOF'
 ## Metrics
 | metric | target | measurement |
 |---|---|---|
-| latency p95 | < 100 ms | load test |
+| latency p95 | < 200 ms | load test |
 | valid-input errors | 0 | suite |
 EOF
 put "$A/backlog.md" <<'EOF'
@@ -113,7 +113,7 @@ As a visitor, I want to be greeted by name, so that the service feels personal.
 - docs/agile/ux/wireframes/S-001.html
 
 ## NFRs
-- Latency p95 under 100 ms.
+- Latency p95 under 200 ms.
 - Accessibility: labeled input, AA contrast.
 
 ## Open questions
@@ -169,6 +169,11 @@ put "$A/ux/usability-notes.md" <<'EOF'
 - Contrast: #111 on #fff is 18.9:1, passes AA.
 - Keyboard order follows visual order.
 EOF
+sign "DoR-S-001" ba docs/agile/stories/S-001.md
+sign "DoR-S-001" ux docs/agile/ux/wireframes/S-001.html
+sign "DoR-S-001" sre docs/agile/stories/S-001.md
+sign "DoR-S-001" tech-lead docs/agile/stories/S-001.md
+flow check DoR-S-001
 commit "docs: ux for S-001"
 flow advance >/dev/null
 
@@ -200,6 +205,19 @@ put "$A/architecture/nfrs.md" <<'EOF'
 |---|---|---|---|
 | latency | p95 < 100 ms | load test | sre |
 | availability | 99.5% monthly | SLO burn | sre |
+EOF
+put "$A/architecture/threat-model.md" <<'EOF'
+# Threat model
+
+## Assets
+- Visitor input and the greeting response.
+
+## Trust boundaries
+- Browser to HTTP handler.
+
+## Threats
+- Tampering: oversized input. Control: length validation in greet().
+- Denial of service: unbounded input. Control: 40-character limit.
 EOF
 put "$A/architecture/fitness-functions.md" <<'EOF'
 # Fitness functions

@@ -5,7 +5,7 @@ import { detectStack, renderProfile } from './stack.mjs';
 import { nextAction, nextPhase, PHASES, GATE_AFTER } from './phases.mjs';
 import { recordReview, ReviewError } from './reviews.mjs';
 import { ROLE_SCOPE, checkBoundary, ignoredPaths } from './boundary.mjs';
-import { checkGate } from './gates.mjs';
+import { checkGate, checkStoryReady } from './gates.mjs';
 import { addWaiver, WaiverError } from './waivers.mjs';
 import { validateSkillTree } from './skills.mjs';
 import { readdirSync } from 'node:fs';
@@ -92,6 +92,9 @@ async function cmdStatus(cwd) {
   const now = new Date().toISOString().slice(0, 10);
   const active = state.waivers.filter((w) => w.expires >= now);
   for (const w of active) console.log(`waiver: ${w.gate} ${w.requirement} until ${w.expires}`);
+  for (const [id, story] of Object.entries(state.stories ?? {})) {
+    console.log(`${id} dor ${story.dor ?? 'pending'} dod ${story.dod ?? 'pending'}`);
+  }
   if (state.escalation) {
     console.log(`escalation: ${state.escalation.reason}`);
     console.log(`question: ${state.escalation.question}`);
@@ -185,7 +188,9 @@ async function cmdCheck(args, cwd) {
     console.error('usage: agile-flow check <gate>');
     return 1;
   }
-  const result = await checkGate(cwd, gate);
+  const result = gate.startsWith('DoR-')
+    ? await checkStoryReady(cwd, gate.slice(4))
+    : await checkGate(cwd, gate);
   if (result.ok) {
     console.log(`${gate} pass`);
     for (const waived of result.waived ?? []) console.log(`waived: ${waived}`);

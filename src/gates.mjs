@@ -25,6 +25,7 @@ export const GATE_DEFS = {
       md('architecture/system.md', ['## System']),
       md('architecture/nfrs.md', ['## NFRs']),
       md('architecture/fitness-functions.md', ['## Fitness functions']),
+      md('architecture/threat-model.md', ['## Assets', '## Trust boundaries', '## Threats']),
       md('architecture/adrs/*.md', ['## Status', '## Decision']),
       md('ux/flows.md', ['## Flows']),
       md('ux/tokens.json', []),
@@ -246,6 +247,77 @@ export async function runChecks(root, profile, names = ['test', 'coverage', 'lin
   return { ok: results.every((r) => r.ok), results };
 }
 
+const STORY_HEADINGS = [
+  '## Story',
+  '## Acceptance criteria',
+  '## Non-goals',
+  '## Test plan',
+  '## Wireframe',
+  '## NFRs',
+  '## Open questions',
+  '## Slice',
+];
+
+export async function checkStoryReady(root, storyId) {
+  const failures = [];
+  const storyRel = `stories/${storyId}.md`;
+  let text;
+  try {
+    text = await readFile(join(agileDir(root), storyRel), 'utf8');
+  } catch {
+    return { ok: false, failures: [`missing story: docs/agile/${storyRel}`] };
+  }
+
+  for (const heading of STORY_HEADINGS) {
+    if (!text.includes(heading)) failures.push(`story missing heading "${heading}"`);
+  }
+  if (!/^priority:[ \t]*\S+/m.test(text)) failures.push('story has no priority');
+  if (/status:\s*open/i.test(sectionBody(text, '## Open questions'))) {
+    failures.push('story has a blocking open question');
+  }
+
+  const wireframe = text.match(/docs\/agile\/ux\/wireframes\/[^\s)]+/)?.[0];
+  if (!wireframe) {
+    failures.push('story names no wireframe');
+  } else {
+    try {
+      await readFile(join(agileDir(root), wireframe.replace('docs/agile/', '')), 'utf8');
+    } catch {
+      failures.push(`wireframe does not exist: ${wireframe}`);
+    }
+  }
+
+  const state = await loadState(root);
+  const reviews = await validateReviews(root, `DoR-${storyId}`, ['ba', 'ux', 'sre', 'tech-lead'], {}, activeWaivers(state));
+  failures.push(...reviews.failures);
+
+  state.stories[storyId] = {
+    ...(state.stories[storyId] ?? {}),
+    dor: failures.length === 0 ? 'pass' : 'pending',
+    checkedAt: new Date().toISOString(),
+  };
+  await saveState(root, state);
+
+  return { ok: failures.length === 0, failures };
+}
+
+export async function validateStoryLinkage(root, state) {
+  const failures = [];
+  const dirs = await walk(join(agileDir(root), 'build'));
+  const ids = new Set(
+    dirs
+      .map((rel) => rel.split('/')[0])
+      .filter((id) => id && id !== 'build'),
+  );
+  for (const id of ids) {
+    const story = state.stories?.[id];
+    if (!story || story.dor !== 'pass') {
+      failures.push(`story ${id} has build artifacts but DoR never passed`);
+    }
+  }
+  return failures;
+}
+
 export async function checkGate(root, gate) {
   const def = GATE_DEFS[gate];
   if (!def) return { ok: false, failures: [`unknown gate: ${gate}`] };
@@ -253,7 +325,10 @@ export async function checkGate(root, gate) {
   const failures = [];
 
   failures.push(...(await validateArtifacts(root, def.artifacts)));
-  if (gate === 'G3') failures.push(...(await validateTddEvidence(root)));
+  if (gate === 'G3') {
+    failures.push(...(await validateTddEvidence(root)));
+    failures.push(...(await validateStoryLinkage(root, state)));
+  }
 
   const profile = await loadProfile(root);
   const checks = await runChecks(root, profile, def.checks);
@@ -292,6 +367,13 @@ export async function checkGate(root, gate) {
     }
     await saveState(root, state);
     return { ok: false, failures: blocking };
+  }
+
+  if (gate === 'G3') {
+    const dirs = await walk(join(agileDir(root), 'build'));
+    for (const id of new Set(dirs.map((rel) => rel.split('/')[0]).filter((id) => id !== 'build'))) {
+      if (state.stories?.[id]) state.stories[id].dod = 'pass';
+    }
   }
 
   state.gates[gate] = { status: 'pass', at: new Date().toISOString() };

@@ -23,6 +23,7 @@ You own the shape of the system and the properties it must hold. You do not own 
 - `docs/agile/architecture/c4/`
 - `docs/agile/architecture/adrs/NNNN-<slug>.md`
 - `docs/agile/architecture/glossary.md`
+- `docs/agile/architecture/threat-model.md`
 - `docs/agile/architecture/legacy-assessment.md` on brownfield
 - `docs/agile/reviews/G1-architect.yaml`
 - `docs/agile/reviews/G3-architect.yaml`
@@ -104,7 +105,7 @@ Rules:
 - Prefer the smaller structure. A modular monolith is the default until a measured force says otherwise.
 - Never adopt a pattern whose operational cost the SRE role cannot support.
 - Write the trade-off in the ADR: what the pattern buys, what it costs, and what would make you reverse it.
-- Do not apply tactical DDD patterns (aggregates, repositories, domain events) as a checklist. Use them where the domain's invariants need them; tech radar stays advisory.
+- Do not apply tactical DDD patterns (aggregates, repositories, domain events) as a checklist. Use them where the domain's invariants need them.
 
 ### Domain-driven design
 
@@ -122,6 +123,18 @@ Design the codebase around the domain, not around the framework. DDD is how the 
 - **Clean code follows from the model.** Names come from the ubiquitous language. Modules follow bounded contexts. Functions sit at the level of abstraction of the aggregate they serve. A structure that contradicts the model is a smell even when each file looks tidy.
 
 Every context, boundary, and anti-corruption layer gets an ADR entry or a line in `system.md`. Every glossary term that changes is a superseding note, not a silent rename.
+
+### Threat modelling
+
+Security is a design property, not a test phase. Before G1, write `architecture/threat-model.md` with `## Assets`, `## Trust boundaries`, and `## Threats`.
+
+- **Assets**: what an attacker wants. Credentials, personal data, money, audit history, availability.
+- **Trust boundaries**: every place data crosses a privilege level. Browser to server, service to service, server to database, job to external API, operator to admin console.
+- **Threats**: walk STRIDE across each boundary. Spoofing, tampering, repudiation, information disclosure, denial of service, elevation of privilege.
+- For each threat, name the control that addresses it or the debt entry that accepts it. A threat with neither is a finding, not a note.
+- Prefer controls that remove the class of threat: parameterized queries, allow-lists, least-privilege credentials, short-lived tokens, server-side authorization on every object access.
+- Never assume the transport, the framework, or the gateway handles it. Name the layer that enforces each control.
+- Anything touching authentication, money, or personal data needs this model before build, not after.
 
 ### NFRs
 

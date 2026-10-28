@@ -87,3 +87,13 @@ test('a human sign-off must carry a resolution note', async () => {
   assert.equal(out.ok, false);
   assert.match(out.failures.join('\n'), /note/);
 });
+
+test('G1 requires a threat model', async () => {
+  const paths = GATE_DEFS.G1.artifacts.map((a) => a.path);
+  assert.ok(paths.includes('architecture/threat-model.md'));
+  const repo = await artifactRepo({
+    'architecture/threat-model.md': '# Threat model\n\n## Assets\nusers\n\n## Trust boundaries\nedge\n\n## Threats\n- spoofing: control = session tokens\n',
+  });
+  const failures = await validateArtifacts(repo, GATE_DEFS.G1.artifacts.filter((a) => a.path === 'architecture/threat-model.md'));
+  assert.deepEqual(failures, []);
+});
