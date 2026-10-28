@@ -12,6 +12,7 @@ export const ROLES = [
   'qa',
   'sre',
   'flow',
+  'human',
 ];
 
 const VERDICTS = ['pass', 'fail', 'pass-with-risk'];

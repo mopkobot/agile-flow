@@ -5,6 +5,7 @@ import { detectStack, renderProfile } from './stack.mjs';
 import { nextAction } from './phases.mjs';
 import { recordReview, ReviewError } from './reviews.mjs';
 import { ROLE_SCOPE } from './boundary.mjs';
+import { checkGate } from './gates.mjs';
 import { execFileSync } from 'node:child_process';
 
 function headSha(cwd) {
@@ -29,6 +30,8 @@ export async function run(argv, cwd = process.cwd()) {
         return await cmdResume(rest, cwd);
       case 'sign':
         return await cmdSign(rest, cwd);
+      case 'check':
+        return await cmdCheck(rest, cwd);
       default:
         return usage();
     }
@@ -150,8 +153,24 @@ async function cmdSign(args, cwd) {
   }
 }
 
+async function cmdCheck(args, cwd) {
+  const gate = args[0];
+  if (!gate) {
+    console.error('usage: agile-flow check <gate>');
+    return 1;
+  }
+  const result = await checkGate(cwd, gate);
+  if (result.ok) {
+    console.log(`${gate} pass`);
+    return 0;
+  }
+  console.error(`${gate} fail`);
+  for (const failure of result.failures) console.error(`- ${failure}`);
+  return 1;
+}
+
 function usage() {
-  console.error('usage: agile-flow <init|status|next|resume|sign> [options]');
+  console.error('usage: agile-flow <init|status|next|resume|sign|check> [options]');
   return 1;
 }
 
