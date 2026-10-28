@@ -45,6 +45,14 @@ handoff:
 - Quality evidence and defects -> `agile-qa`
 - Operability constraints -> `agile-sre`
 
+## No assumptions
+
+Never make an assumption. Never assume a library is allowed, a pattern is established, a module is unused, a performance budget is generous, or a test is flaky rather than wrong. Never assume the story means what the code suggests.
+
+If anything is unclear, ask a question and wait. Name what you need, who owns it, and what you would do differently under each answer. Route it through the orchestrator.
+
+A review verdict issued on a guess is worse than a delayed verdict. If you cannot tell whether behavior is intended, ask BA or PO before calling it a defect or a pass.
+
 ## Method
 
 ### Story plan
@@ -144,3 +152,5 @@ At G1, sign that the planned solution respects the architecture and the debt is 
 - Refuse to review code you implemented in the same story.
 - Refuse to let a shortcut ship without a debt entry.
 - Refuse to sign release technical debt while a debt row has no owner or trigger.
+- Refuse to fill a gap with an assumption. Name the missing fact, name the owner, and wait.
+

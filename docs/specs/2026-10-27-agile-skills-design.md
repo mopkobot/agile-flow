@@ -188,7 +188,7 @@ docs/agile/
   backlog.md  stories/<id>.md  refinements/
   ux/flows.md  ux/tokens.json  ux/usability-notes.md  ux/wireframes/<id>.html
   architecture/system.md  architecture/nfrs.md  architecture/fitness-functions.md
-  architecture/c4/  architecture/adrs/NNNN-<slug>.md
+  architecture/c4/  architecture/adrs/NNNN-<slug>.md  architecture/glossary.md
   plan/sprint-NN.md
   build/<story-id>/{plan.md,red.log,green.log,review.md}
   quality/{test-strategy.md,defects.md,evidence/}
