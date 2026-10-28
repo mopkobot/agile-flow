@@ -1,0 +1,16 @@
+{
+  "name": "agile-flow-skills",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Agile delivery lifecycle skills for OpenCode with hard gates and enforced role boundaries",
+  "bin": {
+    "agile-flow": "./bin/agile-flow.mjs"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
