@@ -1,12 +1,22 @@
 import { execFileSync } from 'node:child_process';
 
 export const ROLE_SCOPE = {
-  'agile-flow': ['docs/agile/state.json', 'docs/agile/reviews/**', 'docs/agile/retro/**', 'docs/agile/waivers/**'],
+  'agile-flow': [
+    'docs/agile/state.json',
+    'docs/agile/stack-profile.md',
+    'docs/agile/reviews/**',
+    'docs/agile/retro/**',
+    'docs/agile/waivers/**',
+    'docs/agile/plan/**',
+    'docs/agile/release/**',
+  ],
+  human: ['docs/agile/reviews/*-human.yaml'],
   'agile-po': [
     'docs/agile/vision.md',
     'docs/agile/personas.md',
     'docs/agile/success-metrics.md',
     'docs/agile/backlog.md',
+    'docs/agile/reviews/G0-po.yaml',
     'docs/agile/reviews/G3-po.yaml',
   ],
   'agile-ba': ['docs/agile/stories/**', 'docs/agile/refinements/**', 'docs/agile/reviews/DoR-*.yaml'],

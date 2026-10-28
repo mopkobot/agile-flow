@@ -57,11 +57,7 @@ export const PHASE_INPUTS = {
 export function nextAction(state) {
   const gate = GATE_AFTER[state.phase] ?? null;
   let blocked = null;
-  if (state.escalation) {
-    blocked = `escalation: ${state.escalation.reason}`;
-  } else if (gate && state.gates?.[gate]?.status !== 'pass') {
-    blocked = `gate ${gate} is ${state.gates?.[gate]?.status ?? 'locked'}`;
-  }
+  if (state.escalation) blocked = `escalation: ${state.escalation.reason}`;
   return {
     phase: state.phase,
     role: PHASE_ROLE[state.phase] ?? 'agile-flow',

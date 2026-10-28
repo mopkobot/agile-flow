@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { agileDir, loadState, saveState } from './state.mjs';
 import { globToRegExp, ROLE_SCOPE, checkBoundary } from './boundary.mjs';
 import { parseProfile } from './stack.mjs';
-import { validateReviews } from './reviews.mjs';
+import { readReviews, validateReviews } from './reviews.mjs';
 import { activeWaivers, waiverCovers } from './waivers.mjs';
 
 const md = (path, headings) => ({ path, headings });
@@ -194,7 +194,14 @@ export async function checkGate(root, gate) {
   const reviews = await validateReviews(root, gate, def.roles, authors, waivers);
   failures.push(...reviews.failures);
 
-  const boundary = await checkBoundary(root, state.writeScope, state.stageBase);
+  const signers = (await readReviews(root, gate)).map((r) => (r.role === 'human' ? 'human' : `agile-${r.role}`));
+  const allowed = [
+    ...(state.writeScope ?? []),
+    ...ROLE_SCOPE['agile-flow'],
+    ...ROLE_SCOPE.human,
+    ...signers.flatMap((role) => ROLE_SCOPE[role] ?? []),
+  ];
+  const boundary = await checkBoundary(root, allowed, state.stageBase);
   if (!boundary.ok) {
     failures.push(boundary.reason ?? `boundary violation: ${boundary.violations.join(', ')}`);
   }

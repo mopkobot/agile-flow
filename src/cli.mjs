@@ -2,7 +2,7 @@ import { writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { initFlow, loadState, saveState, StateError, GATES, agileDir } from './state.mjs';
 import { detectStack, renderProfile } from './stack.mjs';
-import { nextAction } from './phases.mjs';
+import { nextAction, nextPhase, PHASES, GATE_AFTER } from './phases.mjs';
 import { recordReview, ReviewError } from './reviews.mjs';
 import { ROLE_SCOPE } from './boundary.mjs';
 import { checkGate } from './gates.mjs';
@@ -39,6 +39,8 @@ export async function run(argv, cwd = process.cwd()) {
         return await cmdWaive(rest, cwd);
       case 'skills':
         return cmdSkills(cwd, rest);
+      case 'advance':
+        return await cmdAdvance(rest, cwd);
       default:
         return usage();
     }
@@ -103,7 +105,7 @@ async function cmdNext(cwd) {
   const state = await loadState(cwd);
   const action = nextAction(state);
   if (!action.blocked) {
-    if (!state.stageBase) state.stageBase = headSha(cwd);
+    if (!state.stageBase || state.activeRole !== action.role) state.stageBase = headSha(cwd);
     state.activeRole = action.role;
     state.writeScope = ROLE_SCOPE[action.role] ?? [];
     await saveState(cwd, state);
@@ -199,6 +201,33 @@ async function cmdWaive(args, cwd) {
   }
 }
 
+async function cmdAdvance(args, cwd) {
+  const state = await loadState(cwd);
+  if (state.escalation) {
+    console.error(`error: escalation open (${state.escalation.reason}); resolve it before advancing`);
+    return 1;
+  }
+  const gate = GATE_AFTER[state.phase];
+  if (gate && state.gates[gate]?.status !== 'pass') {
+    console.error(`error: ${gate} has not passed; cannot leave ${state.phase}`);
+    return 1;
+  }
+  const target = flag(args, 'phase') ?? nextPhase(state.phase);
+  if (!target) {
+    console.error('error: already at the final phase');
+    return 1;
+  }
+  if (!PHASES.includes(target)) {
+    console.error(`error: unknown phase: ${target}`);
+    return 1;
+  }
+  state.phase = target;
+  state.stageBase = null;
+  await saveState(cwd, state);
+  console.log(`phase: ${target}`);
+  return 0;
+}
+
 function cmdSkills(cwd, args = []) {
   const root = resolve(cwd, flag(args, 'dir') ?? 'skills');
   const result = validateSkillTree(root);
@@ -208,7 +237,7 @@ function cmdSkills(cwd, args = []) {
 }
 
 function usage() {
-  console.error('usage: agile-flow <init|status|next|resume|sign|check|waive|skills> [options]');
+  console.error('usage: agile-flow <init|status|next|advance|resume|sign|check|waive|skills> [options]');
   return 1;
 }
 
