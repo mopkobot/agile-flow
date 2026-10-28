@@ -163,6 +163,10 @@ The orchestrator cannot satisfy a gate by assertion. Only `bin/agile-flow.mjs ch
 
 Gate failure path: retry once with corrective instructions supplied by the failing role, then escalate to the human. Retry counts live in `state.json`; a gate never opens because retries were exhausted.
 
+### 5.2 Tech debt allocation
+
+The operator sets a percentage of every sprint reserved for technical debt at intake (`--debt-percent` or `debt set`). State stores it in `debtAllocation`. The sprint plan declares the same percentage and a weighted table mapping each story to a size and a debt flag. G2 refuses a plan whose declared percentage differs or whose debt weight share falls below the allocation. Weight is small 1, medium 2, large 3; estimation beyond that stays out of scope.
+
 ## 6. Build inner loop
 
 Per story, flat sibling spawns. No nesting.
@@ -305,6 +309,7 @@ Human-signed only. A waiver names the gate, the requirement waived, the reason, 
 | `tracker sync [--dry-run]` | Mirrors story status to GitHub issue labels | 0, 1 gh failure |
 | `setup-human` | Sets or rotates the human passphrase | 0, 1 |
 | `harness` | Reports present and missing AI-harness elements, with a fix per gap | 0 complete, 1 gaps |
+| `debt set <percent>` | Sets the standing sprint debt allocation | 0, 1 |
 | `identity issue --role <role>` | Human-authenticated: issues a role token, stores only its hash | 0, 1 |
 | `audit sample` | Prints citable claims sampled for verification | 0, 1 |
 | `audit record` | Records a passing or failing audit for a gate | 0, 1 |

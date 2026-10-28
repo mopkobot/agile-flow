@@ -79,6 +79,8 @@ async function dispatch(command, rest, cwd) {
         return cmdHarness(cwd);
       case 'retro':
         return await cmdRetro(rest, cwd);
+      case 'debt':
+        return await cmdDebt(rest, cwd);
       case 'identity':
         return await cmdIdentity(rest, cwd);
       default:
@@ -101,11 +103,28 @@ function flag(args, name) {
 async function cmdInit(args, cwd) {
   const mode = flag(args, 'mode');
   const root = resolve(cwd, flag(args, 'repo') ?? '.');
+
+  let allocation = null;
+  const debtPercent = flag(args, 'debt-percent');
+  if (debtPercent !== undefined) {
+    const { parsePercent, DebtError } = await import('./debt.mjs');
+    try {
+      allocation = { percent: parsePercent(debtPercent), setBy: 'human', at: new Date().toISOString() };
+    } catch (err) {
+      if (err instanceof DebtError) {
+        console.error(`error: ${err.message}`);
+        return 1;
+      }
+      throw err;
+    }
+  }
+
   const { created, state } = await initFlow(root, mode);
   if (!created) {
     console.error(`error: ${state.targetRepo} already initialized`);
     return 2;
   }
+  if (allocation) state.debtAllocation = allocation;
   const stack = detectStack(root);
   state.stackDetected = Boolean(stack);
   await saveState(root, state);
@@ -302,6 +321,26 @@ async function cmdGuard(args, cwd) {
   console.error(`blocked: ${action} needs human approval`);
   console.error(`question: ${question.trim()}`);
   return 1;
+}
+
+async function cmdDebt(args, cwd) {
+  const sub = args[0];
+  const { setDebtAllocation, DebtError } = await import('./debt.mjs');
+  if (sub !== 'set') {
+    console.error('usage: agile-flow debt set <percent>');
+    return 1;
+  }
+  try {
+    const allocation = await setDebtAllocation(cwd, args[1]);
+    console.log(`debt allocation: ${allocation.percent}%`);
+    return 0;
+  } catch (err) {
+    if (err instanceof DebtError) {
+      console.error(`error: ${err.message}`);
+      return 1;
+    }
+    throw err;
+  }
 }
 
 async function cmdRetro(args, cwd) {
@@ -555,7 +594,7 @@ function cmdSkills(cwd, args = []) {
 }
 
 function usage() {
-  console.error('usage: agile-flow <init|status|next|advance|guard|resume|sign|check|waive|skills|setup-human|identity|story|tracker|audit|harness|retro> [options]');
+  console.error('usage: agile-flow <init|status|next|advance|guard|resume|sign|check|waive|skills|setup-human|identity|story|tracker|audit|harness|retro|debt> [options]');
   return 1;
 }
 

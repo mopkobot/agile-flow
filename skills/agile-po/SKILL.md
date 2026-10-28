@@ -91,6 +91,7 @@ In planning, return a scope proposal containing:
 
 - Goal in one sentence.
 - Story ids in build order, taken only from stories whose DoR passed.
+- Debt allocation: the configured percentage, plus the debt items that fill it, supplied by the tech lead. The plan is invalid without this section.
 - Explicit non-goals for the sprint.
 - Demo script: the three to five observable behaviors the operator will see.
 

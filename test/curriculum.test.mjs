@@ -81,3 +81,12 @@ test('the retro closes the loop on process, product, and debt actions', async ()
   assert.match(flow, /debt.*actions become rows/i);
   assert.match(flow, /retro check/);
 });
+
+test('the orchestrator asks for a debt allocation and G2 enforces it', async () => {
+  const flow = await read('agile-flow');
+  assert.match(flow, /percentage of every sprint/i);
+  assert.match(flow, /debt set/);
+  assert.match(flow, /G2 refuses/i);
+  const po = await read('agile-po');
+  assert.match(po, /Debt allocation/i);
+});

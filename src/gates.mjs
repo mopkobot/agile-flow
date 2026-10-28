@@ -379,6 +379,19 @@ export async function checkGate(root, gate) {
   const failures = [];
 
   failures.push(...(await validateArtifacts(root, def.artifacts)));
+  if (gate === 'G2') {
+    const { checkDebtAllocation } = await import('./debt.mjs');
+    const percent = state.debtAllocation?.percent;
+    if (percent === undefined || percent === null) {
+      failures.push('no debt allocation configured; run "agile-flow debt set <percent>"');
+    } else {
+      const planDir = join(agileDir(root), 'plan');
+      const plans = (await readdir(planDir).catch(() => [])).filter((f) => /^sprint-.*\.md$/.test(f));
+      const latest = plans.sort().pop();
+      if (!latest) failures.push('no sprint plan to validate against the debt allocation');
+      else failures.push(...checkDebtAllocation(await readFile(join(planDir, latest), 'utf8'), percent));
+    }
+  }
   if (gate === 'G1') {
     failures.push(...(await validateNfrMeasurements(root)));
   }

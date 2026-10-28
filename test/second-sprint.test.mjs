@@ -97,7 +97,7 @@ dependencies: none
     await run(['next'], repo);
   }
 
-  await put(repo, 'plan/sprint-02.md', '# Sprint 02\n\n## Scope\nFarewell endpoint.\n\n## Stories\n1. S-002\n');
+  await put(repo, 'plan/sprint-02.md', '# Sprint 02\n\n## Scope\nFarewell endpoint.\n\n## Debt allocation\npercent: 20\n\n| story | size | debt |\n|---|---|---|\n| S-002 | small | no |\n| D-001 | small | yes |\n\n## Stories\n1. S-002\n');
   assert.equal(await run(['check', 'G2'], repo), 0);
   commit(repo, 'docs: plan sprint 02');
   assert.equal(await run(['advance'], repo), 0);

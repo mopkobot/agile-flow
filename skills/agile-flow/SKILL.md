@@ -57,6 +57,12 @@ Run `node bin/agile-flow.mjs status`.
 - No state: ask for the repository path and whether it is greenfield or brownfield. Then run `init --repo <path> --mode <mode>`.
 - State present: read `phase`, `gates`, `escalation`, `waivers`. Resume at `phase`.
 
+Before discovery, ask the operator one question and record the answer:
+
+> What percentage of every sprint should be reserved for technical debt?
+
+Run `node bin/agile-flow.mjs debt set <percent>` (or pass `--debt-percent` to `init`). This is a standing commitment, not a per-sprint negotiation. G2 refuses a sprint plan whose debt section declares a different percentage or whose weighted debt work falls below it. If the operator wants to change the allocation later, they change it explicitly with `debt set`, and the change applies from that sprint.
+
 After initializing a **brownfield** repository, run `node bin/agile-flow.mjs harness`. If it reports gaps, ask the operator one question before any discovery work:
 
 > This repository has no AI development harness. Want me to define one first? It covers product context, architecture boundaries, reliability signals, and the agent rules and commands, which makes every later agent step faster and less error-prone.
@@ -128,7 +134,7 @@ The auditor must not be a role that authored the artifacts it checks. If it is, 
 
 ### 6. Ceremonies
 
-- Sprint planning, in the planning phase: `agile-po` proposes scope from priority order; write `plan/sprint-<NN>.md`; gate G2 requires the human.
+- Sprint planning, in the planning phase: `agile-po` proposes scope from priority order, and `agile-tech-lead` supplies the debt items from the register. Write `plan/sprint-<NN>.md` containing `## Debt allocation` with `percent:` equal to the configured allocation and a weighted table (`story | size | debt`), then the stories. G2 refuses a plan that under-allocates debt.
 - Demo, in the release phase: `agile-po` writes the demo script into `release/release-notes.md`.
 - Retro, after G4: write `retro/retro-<NN>.md` from `templates/retro.md`. Every action gets a type and target. Then close the loop:
   - `process` actions change how the team works. Draft the edit to `skills/<target>/SKILL.md`, show the operator the exact diff, and apply it only after approval. The installed skills are symlinks into this repository, so the change is live immediately. Run `node bin/agile-flow.mjs skills` and `node --test` after the edit, then commit.

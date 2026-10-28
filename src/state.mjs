@@ -138,6 +138,7 @@ export function freshState(mode) {
     stackDetected: false,
     humanAuth: null,
     audits: {},
+    debtAllocation: null,
   };
 }
 

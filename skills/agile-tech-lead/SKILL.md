@@ -68,6 +68,12 @@ Write `build/<story-id>/plan.md` before implementation:
 
 If the story cannot be built without changing an architectural decision, stop and hand back to the architect. Do not quietly widen the design.
 
+### Debt allocation in planning
+
+The operator sets a standing percentage of each sprint for technical debt. At planning, select debt rows whose repayment trigger is due, or whose interest is highest, and propose enough weight to meet that percentage. Do not silently accept a sprint that spends it all on features.
+
+Weights are declared by size: small 1, medium 2, large 3. The plan's `## Debt allocation` table is what G2 checks.
+
 ### Feasibility at DoR
 
 Before a story is ready, state:

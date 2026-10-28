@@ -27,7 +27,7 @@ sign() {
 }
 
 say "init"
-flow init --mode "$MODE" --repo . >/dev/null
+flow init --mode "$MODE" --repo . --debt-percent 20 >/dev/null
 commit "chore: initialize agile flow"
 
 if [ "$MODE" = "brownfield" ]; then
@@ -279,6 +279,14 @@ put "$A/plan/sprint-01.md" <<'EOF'
 
 ## Scope
 Ship S-001 and verify the greeting path.
+
+## Debt allocation
+percent: 20
+
+| story | size | debt |
+|---|---|---|
+| S-001 | small | no |
+| D-001 | small | yes |
 
 ## Stories
 1. S-001 greet by name

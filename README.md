@@ -47,6 +47,7 @@ intake -> discovery [G0] -> shaping -> ux -> architecture [G1] -> planning [G2]
 
 - **DoR story**: story template, four shaping sign-offs (BA, UX, SRE, tech lead), wireframe present, no blocking open question. Checked with `agile-flow check DoR-<id>` after UX.
 - **Harness (brownfield first)**: product, architecture, reliability, agent rules, commands. `agile-flow harness
+agile-flow debt set <percent>
 agile-flow identity issue --role <role>` lists gaps. The orchestrator asks whether to define one before discovery.
 - **G0 scope**: vision, personas, metrics, backlog. PO and human.
 - **G1 design**: architecture, ADRs, NFRs, fitness functions, threat model, glossary, UX, tech-lead review. Architect, tech lead, UX, human.
@@ -68,6 +69,7 @@ agile-flow setup-human
 agile-flow audit sample [--count <n>]
 agile-flow audit record --gate <G3|G4> --verdict pass|fail --checked <n> --note <text>
 agile-flow harness
+agile-flow debt set <percent>
 agile-flow identity issue --role <role>
 agile-flow check <gate|DoR-<story-id>>
 agile-flow sign <gate> --role <role> --verdict pass|fail|pass-with-risk --evidence <paths>
@@ -115,6 +117,10 @@ docs/specs/              design spec
 docs/plans/              implementation plan
 .github/workflows/ci.yml runs tests and skill validation on push and PR
 ```
+
+## Tech debt allocation
+
+At intake the operator sets a standing percentage of each sprint for technical debt. It is stored in state and enforced at G2: the sprint plan must declare the same percentage and include weighted debt work that meets it (`small` 1, `medium` 2, `large` 3). Plans that spend the sprint entirely on features are refused.
 
 ## Retro loop
 
