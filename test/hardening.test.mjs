@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { run } from '../src/cli.mjs';
 import { checkBoundary } from '../src/boundary.mjs';
+import { signAs } from './helpers.mjs';
 
 process.env.AGILE_HUMAN_PASSPHRASE ||= 'test-passphrase';
 
@@ -61,7 +62,7 @@ test('advance refuses when the recorded gate pass no longer verifies', async () 
   await writeFile(join(base, 'personas.md'), '# Personas\n\n## Personas\np\n');
   await writeFile(join(base, 'success-metrics.md'), '# Metrics\n\n## Metrics\nm\n');
   await writeFile(join(base, 'backlog.md'), '# Backlog\n\n## Backlog\nb\n');
-  await run(['sign', 'G0', '--role', 'po', '--verdict', 'pass', '--evidence', 'docs/agile/vision.md'], repo);
+  await signAs(repo, 'G0', 'po', 'docs/agile/vision.md');
   await run(['sign', 'G0', '--role', 'human', '--verdict', 'pass', '--evidence', 'docs/agile/vision.md', '--note', 'approved by operator'], repo);
   assert.equal(await run(['check', 'G0'], repo), 0);
 

@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { run } from '../src/cli.mjs';
 import { loadState } from '../src/state.mjs';
 import { nextAction } from '../src/phases.mjs';
+import { signAs } from './helpers.mjs';
 
 process.env.AGILE_HUMAN_PASSPHRASE ||= 'test-passphrase';
 
@@ -32,7 +33,7 @@ test('state.json alone is enough to resume after a restart', async () => {
   await writeFile(join(base, 'personas.md'), '# Personas\n\n## Personas\np\n');
   await writeFile(join(base, 'success-metrics.md'), '# Metrics\n\n## Metrics\nm\n');
   await writeFile(join(base, 'backlog.md'), '# Backlog\n\n## Backlog\nb\n');
-  await run(['sign', 'G0', '--role', 'po', '--verdict', 'pass', '--evidence', 'docs/agile/vision.md'], repo);
+  await signAs(repo, 'G0', 'po', 'docs/agile/vision.md');
   await run(['sign', 'G0', '--role', 'human', '--verdict', 'pass', '--evidence', 'docs/agile/vision.md', '--note', 'operator approved'], repo);
   assert.equal(await run(['check', 'G0'], repo), 0);
   assert.equal(await run(['advance'], repo), 0);

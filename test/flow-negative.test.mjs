@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { run } from '../src/cli.mjs';
 import { addWaiver } from '../src/waivers.mjs';
+import { signAs } from './helpers.mjs';
 
 process.env.AGILE_HUMAN_PASSPHRASE ||= 'test-passphrase';
 
@@ -38,7 +39,7 @@ async function scopeArtifacts(repo, { backlog = true } = {}) {
   await writeArtifact(repo, 'personas.md', '# Personas\n\n## Personas\np\n');
   await writeArtifact(repo, 'success-metrics.md', '# Metrics\n\n## Metrics\nm\n');
   if (backlog) await writeArtifact(repo, 'backlog.md', '# Backlog\n\n## Backlog\nb\n');
-  await run(['sign', 'G0', '--role', 'po', '--verdict', 'pass', '--evidence', 'docs/agile/vision.md'], repo);
+  await signAs(repo, 'G0', 'po', 'docs/agile/vision.md');
   await run(['sign', 'G0', '--role', 'human', '--verdict', 'pass', '--evidence', 'docs/agile/vision.md', '--note', 'approved by operator'], repo);
 }
 

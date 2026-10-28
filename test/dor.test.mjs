@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { run } from '../src/cli.mjs';
 import { loadState } from '../src/state.mjs';
+import { signAs } from './helpers.mjs';
 
 process.env.AGILE_HUMAN_PASSPHRASE ||= 'test-passphrase';
 
@@ -62,7 +63,7 @@ async function put(dir, rel, body) {
 
 async function signDor(dir, id, roles = ['ba', 'ux', 'sre', 'tech-lead']) {
   for (const role of roles) {
-    const code = await run(['sign', `DoR-${id}`, '--role', role, '--verdict', 'pass', '--evidence', `docs/agile/stories/${id}.md`], dir);
+    const code = await signAs(dir, `DoR-${id}`, role, `docs/agile/stories/${id}.md`);
     assert.equal(code, 0, `${role} sign failed`);
   }
 }

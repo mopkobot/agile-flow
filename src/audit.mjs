@@ -31,7 +31,7 @@ export async function listClaims(root, count = 5) {
   return picked;
 }
 
-export async function recordAudit(root, { gate, verdict, checked, note }) {
+export async function recordAudit(root, { gate, verdict, checked, note, agent = null }) {
   if (!Number.isInteger(checked) || checked <= 0) {
     throw new Error('audit requires --checked greater than zero');
   }
@@ -39,7 +39,7 @@ export async function recordAudit(root, { gate, verdict, checked, note }) {
   if (!note || !note.trim()) throw new Error('audit requires --note describing what was checked');
   const state = await loadState(root);
   state.audits = state.audits ?? {};
-  state.audits[gate] = { verdict, checked, note: note.trim(), sprint: state.sprint, at: new Date().toISOString() };
+  state.audits[gate] = { verdict, checked, note: note.trim(), agent, sprint: state.sprint, at: new Date().toISOString() };
   await saveState(root, state);
   return state.audits[gate];
 }

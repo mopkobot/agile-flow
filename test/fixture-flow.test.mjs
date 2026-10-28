@@ -5,6 +5,7 @@ import { cp, mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { run } from '../src/cli.mjs';
+import { signAs } from './helpers.mjs';
 
 process.env.AGILE_HUMAN_PASSPHRASE ||= 'test-passphrase';
 
@@ -54,7 +55,7 @@ test('G0 refuses without artifacts and opens when complete', async () => {
   assert.equal(await run(['advance'], repo), 0);
   assert.equal(await run(['next'], repo), 0);
   await minimalG0(repo);
-  assert.equal(await run(['sign', 'G0', '--role', 'po', '--verdict', 'pass', '--evidence', 'docs/agile/vision.md'], repo), 0);
+  assert.equal(await signAs(repo, 'G0', 'po', 'docs/agile/vision.md'), 0);
   assert.equal(await run(['sign', 'G0', '--role', 'human', '--verdict', 'pass', '--evidence', 'docs/agile/vision.md', '--note', 'approved by operator'], repo), 0);
   assert.equal(await run(['check', 'G0'], repo), 0);
 });

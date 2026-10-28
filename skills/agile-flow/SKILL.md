@@ -92,6 +92,8 @@ Rules:
 
 One role per spawn. Flat topology: you spawn test-author, implementer, and reviewer yourself. Never ask a role to spawn another role.
 
+Every role sign-off needs a role token. You cannot mint one: ask the operator to run `node bin/agile-flow.mjs identity issue --role <role>` and paste the token. Pass it to the spawned role as `AGILE_ROLE_TOKEN`. Tokens are single-purpose and can be rotated by issuing a new one. If the operator is unavailable, stop; do not sign the role's work yourself.
+
 ### 4. Enforce the gate
 
 A gate opens only when `node bin/agile-flow.mjs check <gate>` exits 0. That command validates artifact structure, runs the stack's executable checks, verifies sign-offs and evidence, and rejects boundary violations and self-approval.

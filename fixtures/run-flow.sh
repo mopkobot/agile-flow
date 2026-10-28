@@ -16,7 +16,15 @@ say() { printf '\n== %s ==\n' "$1"; }
 flow() { node "$CLI" "$@"; }
 commit() { git add -A && git commit -qm "$1" >/dev/null; }
 put() { mkdir -p "$(dirname "$1")"; cat > "$1"; }
-sign() { gate="$1"; role="$2"; ev="$3"; shift 3; flow sign "$gate" --role "$role" --verdict pass --evidence "$ev" "$@" >/dev/null; }
+sign() {
+  gate="$1"; role="$2"; ev="$3"; shift 3
+  if [ "$role" = "human" ]; then
+    flow sign "$gate" --role human --verdict pass --evidence "$ev" "$@" >/dev/null
+  else
+    token="$(flow identity issue --role "$role")"
+    AGILE_ROLE_TOKEN="$token" flow sign "$gate" --role "$role" --verdict pass --evidence "$ev" "$@" >/dev/null
+  fi
+}
 
 say "init"
 flow init --mode "$MODE" --repo . >/dev/null

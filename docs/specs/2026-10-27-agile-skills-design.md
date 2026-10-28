@@ -305,6 +305,7 @@ Human-signed only. A waiver names the gate, the requirement waived, the reason, 
 | `tracker sync [--dry-run]` | Mirrors story status to GitHub issue labels | 0, 1 gh failure |
 | `setup-human` | Sets or rotates the human passphrase | 0, 1 |
 | `harness` | Reports present and missing AI-harness elements, with a fix per gap | 0 complete, 1 gaps |
+| `identity issue --role <role>` | Human-authenticated: issues a role token, stores only its hash | 0, 1 |
 | `audit sample` | Prints citable claims sampled for verification | 0, 1 |
 | `audit record` | Records a passing or failing audit for a gate | 0, 1 |
 | `resume` | Clears an escalation only when the human supplies a resolution note | 0, 1 |
@@ -347,6 +348,12 @@ The `Boundaries` block is mandatory and is copied into `state.json.writeScope` w
 Frontmatter carries `name` and `description` only. Role skills do not spawn subagents; only `agile-flow` spawns. Role skills state their inputs and outputs by path, and they must not write outside their owned paths.
 
 The orchestrator spawns with a fixed prompt envelope: role name, story or gate id, phase, input paths, output paths, current `state.json` snapshot, and the instruction to end with a summary and artifact paths.
+
+### 9.1 Role identity
+
+Role sign-offs require a token issued under human authentication, stored as a salted hash in `state.identity`. The orchestrator passes `AGILE_ROLE_TOKEN` to the role it spawns; it cannot mint one itself. This makes accidental and casual impersonation fail, and leaves only a same-user agent with the human passphrase able to defeat it. That residual risk is accepted, not solved.
+
+State writes are serialized with a lock file and an optimistic revision check. A writer holding a stale revision is rejected rather than overwriting another agent's change.
 
 ## 10. Escalation policy
 

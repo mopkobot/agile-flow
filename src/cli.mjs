@@ -57,6 +57,8 @@ export async function run(argv, cwd = process.cwd(), options = {}) {
         return await cmdAudit(rest, cwd);
       case 'harness':
         return cmdHarness(cwd);
+      case 'identity':
+        return await cmdIdentity(rest, cwd);
       default:
         return usage();
     }
@@ -152,6 +154,7 @@ async function cmdNext(cwd) {
 
 async function cmdResume(args, cwd) {
   const note = flag(args, 'note');
+  const agent = flag(args, 'agent');
   const state = await loadState(cwd);
   if (!note || !note.trim()) {
     console.error('error: resume requires --note with the human resolution');
@@ -171,26 +174,15 @@ async function cmdResume(args, cwd) {
 async function cmdSign(args, cwd) {
   const gate = args[0];
   const state = await loadState(cwd);
-  if (flag(args, 'role') === 'human') {
-    const { verifyPassphrase, resolvePassphrase } = await import('./auth.mjs');
-    if (!state.humanAuth) {
-      console.error('error: no human passphrase configured; run "agile-flow setup-human" in an interactive shell');
-      return 1;
-    }
-    const passphrase = await resolvePassphrase('Human passphrase: ');
-    if (!passphrase) {
-      console.error('error: human sign-off requires the passphrase; set AGILE_HUMAN_PASSPHRASE or run in an interactive terminal');
-      return 1;
-    }
-    if (!verifyPassphrase(passphrase, state.humanAuth)) {
-      console.error('error: human passphrase rejected');
-      return 1;
-    }
+  const roleForAuth = flag(args, 'role');
+  if (roleForAuth === 'human') {
+    if (!(await humanApproved(state))) return 1;
   }
   const role = flag(args, 'role');
   const verdict = flag(args, 'verdict');
   const evidence = flag(args, 'evidence');
   const note = flag(args, 'note');
+  const agent = flag(args, 'agent');
   if (role === 'human' && !note) {
     console.error('error: a human sign-off requires --note with the decision the human supplied');
     return 1;
@@ -200,8 +192,16 @@ async function cmdSign(args, cwd) {
     return 1;
   }
   const paths = evidence.split(',').map((p) => p.trim()).filter(Boolean);
+  if (roleForAuth !== 'human') {
+    const { verifyRoleToken, ROLE_TOKEN_ENV } = await import('./identity.mjs');
+    const check = await verifyRoleToken(cwd, roleForAuth, process.env[ROLE_TOKEN_ENV]);
+    if (!check.ok) {
+      console.error(`error: ${check.reason}`);
+      return 1;
+    }
+  }
   try {
-    const path = await recordReview(cwd, { gate, role, verdict, evidence: paths, note });
+    const path = await recordReview(cwd, { gate, role, verdict, evidence: paths, note, agent });
     console.log(`signed ${gate} as ${role}: ${path}`);
     return 0;
   } catch (err) {
@@ -315,12 +315,13 @@ async function cmdAudit(args, cwd) {
     const verdict = flag(args, 'verdict');
     const checked = Number(flag(args, 'checked'));
     const note = flag(args, 'note');
+  const agent = flag(args, 'agent');
     if (!gate || !verdict || !note) {
       console.error('usage: agile-flow audit record --gate <gate> --verdict pass|fail --checked <n> --note <text>');
       return 1;
     }
     try {
-      await recordAudit(cwd, { gate, verdict, checked, note });
+      await recordAudit(cwd, { gate, verdict, checked, note, agent: flag(args, 'agent') });
       console.log(`audit recorded for ${gate}`);
       return 0;
     } catch (err) {
@@ -330,6 +331,47 @@ async function cmdAudit(args, cwd) {
   }
   console.error('usage: agile-flow audit <sample|record> [options]');
   return 1;
+}
+
+async function cmdIdentity(args, cwd) {
+  const sub = args[0];
+  const role = flag(args, 'role');
+  const { issueRoleToken, IdentityError } = await import('./identity.mjs');
+  if (sub !== 'issue' || !role) {
+    console.error('usage: agile-flow identity issue --role <role>');
+    return 1;
+  }
+  const state = await loadState(cwd);
+  if (!(await humanApproved(state))) return 1;
+  try {
+    const token = await issueRoleToken(cwd, role);
+    console.log(token);
+    return 0;
+  } catch (err) {
+    if (err instanceof IdentityError) {
+      console.error(`error: ${err.message}`);
+      return 1;
+    }
+    throw err;
+  }
+}
+
+async function humanApproved(state) {
+  const { verifyPassphrase, resolvePassphrase } = await import('./auth.mjs');
+  if (!state.humanAuth) {
+    console.error('error: no human passphrase configured; run "agile-flow setup-human"');
+    return false;
+  }
+  const passphrase = await resolvePassphrase('Human passphrase: ');
+  if (!passphrase) {
+    console.error('error: passphrase required; set AGILE_HUMAN_PASSPHRASE or run in an interactive terminal');
+    return false;
+  }
+  if (!verifyPassphrase(passphrase, state.humanAuth)) {
+    console.error('error: human passphrase rejected');
+    return false;
+  }
+  return true;
 }
 
 async function cmdStory(args, cwd) {
@@ -424,21 +466,22 @@ async function cmdAdvance(args, cwd) {
     }
   }
 
-  const target = state.phase === 'retro' ? 'shaping' : flag(args, 'phase') ?? nextPhase(state.phase);
+  const current = await loadState(cwd);
+  const target = current.phase === 'retro' ? 'shaping' : flag(args, 'phase') ?? nextPhase(current.phase);
   if (!target) {
     console.error('error: already at the final phase');
     return 1;
   }
-  if (state.phase === 'retro') {
-    state.sprint += 1;
+  if (current.phase === 'retro') {
+    current.sprint += 1;
   }
   if (!PHASES.includes(target)) {
     console.error(`error: unknown phase: ${target}`);
     return 1;
   }
-  state.phase = target;
-  state.stageBase = null;
-  await saveState(cwd, state);
+  current.phase = target;
+  current.stageBase = null;
+  await saveState(cwd, current);
   console.log(`phase: ${target}`);
   return 0;
 }
@@ -452,7 +495,7 @@ function cmdSkills(cwd, args = []) {
 }
 
 function usage() {
-  console.error('usage: agile-flow <init|status|next|advance|guard|resume|sign|check|waive|skills|setup-human|story|tracker|audit|harness> [options]');
+  console.error('usage: agile-flow <init|status|next|advance|guard|resume|sign|check|waive|skills|setup-human|identity|story|tracker|audit|harness> [options]');
   return 1;
 }
 

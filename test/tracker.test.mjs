@@ -109,3 +109,15 @@ async function capture(args, cwd, env) {
   const res = spawnSync(process.execPath, [bin, ...args], { cwd, env, encoding: 'utf8' });
   return res.stdout + res.stderr;
 }
+
+test('tracker removes the previous status label when the card moves', async () => {
+  const dir = await repo();
+  const gh = await fakeGh(dir, '[{"number":7,"title":"S-001 Greet"}]');
+  assert.equal(await run(['tracker', 'sync'], dir, { env: gh.env }), 0);
+  await run(['story', 'S-001', 'in-dev', '--role', 'dev'], dir);
+  assert.equal(await run(['tracker', 'sync'], dir, { env: gh.env }), 0);
+  const calls = await gh.log();
+  const last = calls.filter((c) => c.startsWith('issue edit')).pop();
+  assert.match(last, /--add-label status:in-dev/);
+  assert.match(last, /--remove-label status:ready/);
+});

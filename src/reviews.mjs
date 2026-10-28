@@ -48,7 +48,7 @@ async function assertEvidence(root, evidence) {
   }
 }
 
-export async function recordReview(root, { gate, role, verdict, evidence, note }) {
+export async function recordReview(root, { gate, role, verdict, evidence, note, agent = null }) {
   if (!GATES.includes(gate) && !/^DoR-[A-Za-z0-9._-]+$/.test(gate)) {
     throw new ReviewError(`unknown gate: ${gate}`);
   }
@@ -64,6 +64,7 @@ export async function recordReview(root, { gate, role, verdict, evidence, note }
     ...evidence.map((e) => `  - ${e}`),
     'open_risks: []',
     ...(note ? [`note: ${note}`] : []),
+    ...(agent ? [`agent: ${agent}`] : []),
     `at: ${new Date().toISOString()}`,
     '',
   ].join('\n');

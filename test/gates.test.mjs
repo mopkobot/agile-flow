@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { checkGate } from '../src/gates.mjs';
 import { loadState } from '../src/state.mjs';
 import { run } from '../src/cli.mjs';
-import { seededRepo } from './helpers.mjs';
+import { seededRepo, signAs } from './helpers.mjs';
 
 process.env.AGILE_HUMAN_PASSPHRASE ||= 'test-passphrase';
 
@@ -55,7 +55,7 @@ async function completeG0(repo) {
   await writeArtifact(repo, 'personas.md', '# Personas\n\n## Personas\np\n');
   await writeArtifact(repo, 'success-metrics.md', '# Metrics\n\n## Metrics\nm\n');
   await writeArtifact(repo, 'backlog.md', '# Backlog\n\n## Backlog\nb\n');
-  assert.equal(await run(['sign', 'G0', '--role', 'po', '--verdict', 'pass', '--evidence', 'docs/agile/vision.md'], repo), 0);
+  assert.equal(await signAs(repo, 'G0', 'po', 'docs/agile/vision.md'), 0);
   assert.equal(await run(['sign', 'G0', '--role', 'human', '--verdict', 'pass', '--evidence', 'docs/agile/vision.md', '--note', 'approved by operator'], repo), 0);
 }
 

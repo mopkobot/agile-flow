@@ -5,6 +5,7 @@ import { cp, mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { run } from '../src/cli.mjs';
+import { signAs } from './helpers.mjs';
 
 process.env.AGILE_HUMAN_PASSPHRASE ||= 'test-passphrase';
 
@@ -35,9 +36,7 @@ function commit(repo, message) {
   execFileSync('git', ['commit', '-qm', message], { cwd: repo });
 }
 
-function signArgs(gate, role, evidence, extra = []) {
-  return ['sign', gate, '--role', role, '--verdict', 'pass', '--evidence', evidence, ...extra];
-}
+
 
 test('a second sprint runs from shaping through retro', async () => {
   const repo = await copyFixture();
@@ -77,11 +76,11 @@ dependencies: none
 `);
 
   for (const role of ['ba', 'sre', 'tech-lead']) {
-    assert.equal(await run(signArgs('DoR-S-002', role, 'docs/agile/stories/S-002.md'), repo), 0, role);
+    assert.equal(await signAs(repo, 'DoR-S-002', role, 'docs/agile/stories/S-002.md'), 0, role);
   }
   await put(repo, 'ux/wireframes/S-002.html', '<!doctype html><p>farewell</p>');
   assert.equal(await run(['next'], repo), 0);
-  assert.equal(await run(signArgs('DoR-S-002', 'ux', 'docs/agile/ux/wireframes/S-002.html'), repo), 0);
+  assert.equal(await signAs(repo, 'DoR-S-002', 'ux', 'docs/agile/ux/wireframes/S-002.html'), 0);
   assert.equal(await run(['check', 'DoR-S-002'], repo), 0);
   commit(repo, 'docs: shape S-002');
 

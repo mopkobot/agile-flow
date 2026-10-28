@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "revision": 0,
   "targetRepo": null,
   "mode": "greenfield",
   "sprint": 1,
@@ -18,5 +19,8 @@
   "gateRetries": {},
   "waivers": [],
   "escalation": null,
-  "stackDetected": false
+  "stackDetected": false,
+  "humanAuth": null,
+  "identity": {},
+  "audits": {}
 }

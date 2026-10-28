@@ -46,7 +46,8 @@ intake -> discovery [G0] -> shaping -> ux -> architecture [G1] -> planning [G2]
 ```
 
 - **DoR story**: story template, four shaping sign-offs (BA, UX, SRE, tech lead), wireframe present, no blocking open question. Checked with `agile-flow check DoR-<id>` after UX.
-- **Harness (brownfield first)**: product, architecture, reliability, agent rules, commands. `agile-flow harness` lists gaps. The orchestrator asks whether to define one before discovery.
+- **Harness (brownfield first)**: product, architecture, reliability, agent rules, commands. `agile-flow harness
+agile-flow identity issue --role <role>` lists gaps. The orchestrator asks whether to define one before discovery.
 - **G0 scope**: vision, personas, metrics, backlog. PO and human.
 - **G1 design**: architecture, ADRs, NFRs, fitness functions, threat model, glossary, UX, tech-lead review. Architect, tech lead, UX, human.
 - **G2 plan**: sprint scope. Human.
@@ -67,6 +68,7 @@ agile-flow setup-human
 agile-flow audit sample [--count <n>]
 agile-flow audit record --gate <G3|G4> --verdict pass|fail --checked <n> --note <text>
 agile-flow harness
+agile-flow identity issue --role <role>
 agile-flow check <gate|DoR-<story-id>>
 agile-flow sign <gate> --role <role> --verdict pass|fail|pass-with-risk --evidence <paths>
 agile-flow waive <gate> [--requirement <text>] --reason <text> --expires YYYY-MM-DD --approver human
@@ -77,6 +79,8 @@ agile-flow skills
 Exit codes: `0` ok, `1` failure, `2` already initialized, `3` blocked.
 
 Story status is the claim mechanism for parallel agents. `in-dev` belongs to the dev role, `in-qa` to QA, `done` to the flow. A rejected transition means another agent owns the card. `tracker sync` mirrors status to GitHub issue labels (`status:ready`, `status:in-dev`, `status:in-qa`, `status:done`).
+
+Role sign-offs are authenticated with per-role tokens: the human runs `identity issue --role <role>` and passes the token to that role as `AGILE_ROLE_TOKEN`. Tokens are stored only as hashes and can be rotated.
 
 Human sign-offs are authenticated with a passphrase hashed at `init` or `setup-human`. Set `AGILE_HUMAN_PASSPHRASE` for that command, or run it in an interactive terminal. An agent shell without the passphrase cannot sign as the human.
 
