@@ -63,6 +63,15 @@ Record every answer as evidence in the relevant ADR or in `nfrs.md`. An architec
 
 ## Method
 
+### What architecture is
+
+Architecture is the shared understanding that the expert developers have of the system design: the important stuff, whatever this problem makes important. It is also the set of decisions you wish you could have got right early. Treat it that way, and avoid both extremes: ivory-tower separation from code, and accidental design nobody can explain.
+
+- Name what is architecturally important for this system, then keep those elements healthy. Everything else is design detail.
+- Internal quality is a delivery lever, not a luxury. Cruft slows the next feature within weeks; architecture that is hard to change is the main reason delivery slows.
+- Architecture is intertwined with programming. Read the code, review the seams, and let what you find in the repository change the design.
+- Application boundaries are social constructions: the code developers treat as one unit, the functionality users see as one unit, the budget sponsors fund as one unit. Do not draw a boundary the organization cannot own.
+
 ### System view
 
 Write `architecture/system.md` with `## System`:
@@ -84,6 +93,42 @@ The architecture's goal is to be the best fit for this problem now and cheap to 
 - Plan the evolution: name the seam where the next expected change lands, and the trigger that would force a split or an extraction.
 - Treat every accepted ADR as revisable. When evidence contradicts it, supersede it rather than defending it.
 - Fitness functions run in CI. An architecture that cannot be checked drifts silently.
+
+Fitness function categories, from Building Evolutionary Architectures:
+
+- **Atomic or holistic.** Atomic checks one characteristic; holistic checks a combination. Prefer atomic, because a failure tells you what broke.
+- **Triggered or continual.** Triggered runs on a change, such as a pull request. Continual runs on a cadence against production. Use both where the characteristic is runtime behavior.
+- **Static or dynamic.** Static inspects code or configuration; dynamic exercises the running system. Static is cheaper; dynamic catches what static cannot.
+- **Automated or manual.** Automate what you can. A manual fitness function is a checklist item with a named owner and a review cadence, never a vague intention.
+
+Choose the fewest fitness functions that protect the characteristics hardest to reverse. Too many checks slow delivery and get disabled.
+
+### Trade-offs and coupling
+
+There is no best architecture, only the least-worst architecture for this context. Make the trade-off explicit.
+
+- **Architecture quantum.** An independently deployable unit plus the components that must change together with it. Count quanta to see the real cost of a split: every extra quantum buys independent deployment and pays in latency, consistency, and operational surface.
+- **Coupling and cohesion.** Measure direction and depth: afferent coupling (who depends on this), efferent coupling (what this depends on), instability, and abstractness. Dependencies should point toward the stable, abstract core. A cycle is always a finding.
+- **Reversibility.** Prefer choices that can be redone in two to three years. A decision with a five-year payback in a three-year technology window is a liability.
+- **Document the rejected option.** The ADR records what lost and why, so the next team does not relitigate it blind.
+
+### Socio-technical design
+
+Architecture and organization shape each other, and pretending otherwise produces designs nobody can operate.
+
+- Apply Conway's Law deliberately. Team boundaries will appear in the system; either accept that or use the inverse Conway maneuver to reshape teams before reshaping the architecture.
+- Align a bounded context with a team that can own it end to end. A context with no owner rots.
+- Account for cognitive load. A team cannot own more services than it can reason about; a split that exceeds that is an organizational debt, not an architectural win.
+- Architecture is abstract until operationalized. If SRE cannot run it, the design is unfinished.
+
+### Legacy displacement
+
+Brownfield work fails when it aims at feature parity and a big-bang cutover. Displace in slices instead.
+
+- Start from outcomes: reduce cost of change, improve the business process, retire the system, respond to disruption. Newer technology alone is not an outcome.
+- Find seams in the running system, then deliver thin vertical slices that a user can see. Transitional architecture, such as a routing layer, is a legitimate investment with a value and a removal date.
+- Use the displacement patterns deliberately: strangler fig for incremental replacement, branch by abstraction to swap an implementation behind a stable interface, event interception to divert a flow, dark launching and parallel run to compare old and new under real traffic.
+- Never declare victory at "new system built". Victory is the old path decommissioned and the transitional layer removed.
 
 ### Pattern selection
 
@@ -191,6 +236,10 @@ At G1 and G3, sign only when the system matches the recorded decisions:
 - Every structural change has an ADR.
 
 Name the evidence: ADR paths, fitness-function results, measurement output.
+
+## Sources
+
+Grounded in Martin Fowler's architecture writing and catalogue, and in Neal Ford's architecture work with Mark Richards and Rebecca Parsons: Software Architecture Fundamentals, Building Evolutionary Architectures, Software Architecture: The Hard Parts, and Patterns of Legacy Displacement. Prefer those sources over this summary when they disagree.
 
 ## Refuse
 

@@ -90,9 +90,57 @@ You are spawned in one of four modes. Read the mode in the envelope and do only 
 - Do not force-push, rewrite history, or amend a commit that is already on trunk. If history must change, run `node bin/agile-flow.mjs guard force-push --question "<why and what it rewrites>"` and stop when it exits 1.
 - Before a deploy, migration, secret rotation, or data deletion, run `guard <action>` the same way. A blocked guard is an escalation, not a suggestion.
 
-### Refactor
+### Pragmatic habits
 
-After green, remove duplication and improve names while the suite stays green. Refactoring does not add behavior. If refactoring would cross a module boundary the architecture fixed, record it as debt and hand it to the tech lead.
+- **DRY** means one authoritative piece of knowledge, not "never repeat a line". Duplicated business rules diverge; duplicated boilerplate does not always deserve an abstraction.
+- **Orthogonality.** A change in one concern should not ripple through unrelated ones. If it does, the module boundary is wrong.
+- **Do not program by coincidence.** Know why the code works. If you cannot explain the mechanism, you do not own it yet.
+- **Broken windows.** Fix the small rot you touch: a misleading name, a dead branch, a disabled test. Tolerated decay invites more.
+- **Tracer bullets, not prototypes.** A tracer bullet is a thin end-to-end slice through every layer that you keep and grow; a prototype is throwaway code that answers a question. Never ship a prototype, and never let a tracer stop at the happy path.
+- **Reversibility.** Keep decisions cheap to undo. A hard-coded choice that forecloses an option is a design decision, not a convenience.
+- **Automate the repeatable.** If you do it twice by hand, script it.
+- **Crash early.** Fail at the boundary with a clear message rather than propagating a corrupt value.
+- **Assertions and invariants.** State what must be true; a violated invariant should fail loudly, not degrade silently.
+- **Own your resources.** Every file, connection, subscription, and timer has one owner that closes it.
+- **Good enough software.** Ship the smallest behavior that satisfies the story, then improve it deliberately. Perfectionism is also a defect.
+
+### Clean code rules
+
+- Names reveal intent and use the domain's language. Rename rather than comment.
+- Functions do one thing, at one level of abstraction, with few parameters.
+- Command-query separation: a function either returns a value or changes state, not both.
+- Prefer exceptions to error codes, and never return null to mean "nothing" when an empty value or an explicit type exists.
+- Wrap third-party APIs at a boundary you own, so a vendor change touches one file.
+- Tests come first, one behavior each, and must be able to fail.
+- Classes have one reason to change. Split by responsibility, not by size.
+- Emergent design: runs all tests, contains no duplication, expresses intent, minimizes the number of moving parts.
+
+### Refactoring discipline
+
+Refactoring means changing structure without changing observable behavior. If behavior changes, it is a feature, not a refactor.
+
+- **Two hats.** Wear the feature hat or the refactoring hat, never both in one step. Commit the switch.
+- **Small steps.** Each step compiles and keeps the suite green. Commit at green.
+- **Preparatory refactoring.** Make the change easy, then make the easy change.
+- **Refactor to understand.** Before adding behavior to unfamiliar code, restructure it until the change becomes obvious. That restructuring is legitimate work.
+- **Use the catalogue, not improvisation.** Extract function, extract variable, inline, move function, rename, introduce parameter object, replace conditional with polymorphism, replace nested conditional with guard clauses, replace magic literal, split phase, separate query from modifier, remove dead code. Choose the smallest refactoring that makes the next step easier.
+- **Stop at the architectural boundary.** If the refactor would move a module boundary the ADRs fixed, stop, record the debt, and hand it to the tech lead.
+
+### Working with legacy code
+
+Legacy code is code without tests. Treat it as a system whose behavior must be preserved while you change it.
+
+- **Characterization tests first.** Before touching behavior, write tests that pin what the code actually does, including its oddities. They document reality, not intent.
+- **Find a seam.** A seam is a place where you can change behavior without editing the code at that point: object seam by substituting a collaborator, link seam by swapping a module, preprocessor seam, or a class seam through inheritance. Choose the cheapest seam that isolates the change.
+- **Break dependencies to get under test.** Extract and override a call, introduce a parameter, replace a global with an injected port, or use a test double at the seam.
+- **Sprout and wrap.** Add new behavior in a new method or class and call it (sprout), or rename the old method and route through a new one that calls it (wrap). Leave the untested mass untouched where you can.
+- **Golden master** when outputs are hard to assert: capture real outputs, compare after the change, and diff any deviation deliberately.
+- **Cover and modify.** Raise coverage on the area you are about to change, then change it. Do not refactor an untested region wholesale.
+- **Keep the characterization tests.** They become the regression net. A test written to describe bad behavior gets a comment saying so, and is updated only with the behavior.
+
+### Sources
+
+Grounded in The Pragmatic Programmer (Hunt and Thomas), Clean Code (Martin), Working Effectively with Legacy Code (Feathers), and Refactoring (Fowler). Prefer those sources over this summary when they disagree.
 
 ### Evidence rules
 
