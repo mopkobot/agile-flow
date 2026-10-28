@@ -47,6 +47,29 @@ export async function loadState(root) {
 }
 
 const LOCK_WAIT_MS = 5000;
+const held = new Map();
+
+export async function withStateLock(root, fn) {
+  const key = statePath(root);
+  const entry = held.get(key);
+  if (entry) {
+    entry.depth += 1;
+    try {
+      return await fn();
+    } finally {
+      entry.depth -= 1;
+    }
+  }
+  await mkdir(dirname(key), { recursive: true });
+  const release = await acquireLock(root);
+  held.set(key, { depth: 1, release });
+  try {
+    return await fn();
+  } finally {
+    held.delete(key);
+    await release();
+  }
+}
 const LOCK_STALE_MS = 10000;
 
 async function acquireLock(root) {
@@ -77,8 +100,7 @@ async function acquireLock(root) {
 
 export async function saveState(root, state) {
   await mkdir(dirname(statePath(root)), { recursive: true });
-  const release = await acquireLock(root);
-  try {
+  return withStateLock(root, async () => {
     const onDisk = await readFile(statePath(root), 'utf8').catch(() => null);
     const diskRevision = onDisk ? JSON.parse(onDisk).revision : null;
     if (diskRevision !== null && state.revision !== diskRevision) {
@@ -91,9 +113,7 @@ export async function saveState(root, state) {
     await writeFile(tmp, `${JSON.stringify(next, null, 2)}\n`, 'utf8');
     await rename(tmp, statePath(root));
     state.revision = next.revision;
-  } finally {
-    await release();
-  }
+  });
 }
 
 export function freshState(mode) {
@@ -125,7 +145,8 @@ export async function initFlow(root, mode) {
   if (mode !== 'greenfield' && mode !== 'brownfield') {
     throw new StateError('--mode must be greenfield or brownfield');
   }
-  const existing = await readdir(agileDir(root)).catch(() => []);
+  const raw = await readdir(agileDir(root)).catch(() => []);
+  const existing = raw.filter((f) => f !== 'state.json.lock' && !f.includes('.tmp-'));
   if (existing.length > 0 && !existing.includes('state.json')) {
     throw new StateError('docs/agile holds artifacts but no state.json; refusing to erase gate history');
   }

@@ -97,7 +97,9 @@ export async function changedPaths(root, stageBase, ignoredBaseline = []) {
   ]
     .map((line) => line.trim())
     .filter(Boolean);
-  return [...new Set(paths)].sort();
+  return [...new Set(paths)]
+    .filter((p) => !p.endsWith('state.json.lock') && !p.includes('.tmp-'))
+    .sort();
 }
 
 export function globToRegExp(glob) {

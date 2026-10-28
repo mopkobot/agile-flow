@@ -25,13 +25,13 @@ test('the java detector points at the maven binary', (t) => {
   assert.match(out, /Apache Maven/i);
 });
 
-test('the ruby detector points at a runnable bundler', (t) => {
+test('the ruby detector points at a runnable bundler', async (t) => {
   if (!available('bundle')) {
     t.skip('bundler is not installed on this machine');
     return;
   }
   const dir = mkdtempSyncSafe();
-  writeFile(join(dir, 'Gemfile'), 'source "https://rubygems.org"\n');
+  await writeFile(join(dir, 'Gemfile'), 'source "https://rubygems.org"\n');
   const profile = detectStack(dir);
   assert.equal(profile.test.split(' ')[0], 'bundle');
   const out = execFileSync('bundle', ['exec', 'ruby', '-e', 'puts "bundler-ok"'], {

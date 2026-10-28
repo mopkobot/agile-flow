@@ -1,6 +1,6 @@
 import { writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
-import { initFlow, loadState, saveState, StateError, GATES, agileDir } from './state.mjs';
+import { initFlow, loadState, saveState, withStateLock, StateError, GATES, agileDir } from './state.mjs';
 import { detectStack, renderProfile } from './stack.mjs';
 import { nextAction, nextPhase, PHASES, GATE_AFTER } from './phases.mjs';
 import { recordReview, ReviewError } from './reviews.mjs';
@@ -22,9 +22,29 @@ function headSha(cwd) {
 
 let runEnv = process.env;
 
+const MUTATING = new Set([
+  'init', 'next', 'advance', 'guard', 'resume', 'sign', 'check',
+  'waive', 'setup-human', 'identity', 'story', 'tracker', 'audit',
+]);
+
 export async function run(argv, cwd = process.cwd(), options = {}) {
   runEnv = options.env ?? process.env;
   const [command, ...rest] = argv;
+  if (MUTATING.has(command)) {
+    try {
+      return await withStateLock(cwd, () => dispatch(command, rest, cwd));
+    } catch (err) {
+      if (err instanceof StateError) {
+        console.error(`error: ${err.message}`);
+        return 1;
+      }
+      throw err;
+    }
+  }
+  return dispatch(command, rest, cwd);
+}
+
+async function dispatch(command, rest, cwd) {
   try {
     switch (command) {
       case 'init':
@@ -344,7 +364,12 @@ async function cmdIdentity(args, cwd) {
   const state = await loadState(cwd);
   if (!(await humanApproved(state))) return 1;
   try {
-    const token = await issueRoleToken(cwd, role);
+    const ttlDays = flag(args, 'ttl-days') === undefined ? 14 : Number(flag(args, 'ttl-days'));
+    if (!Number.isFinite(ttlDays) || ttlDays < 0) {
+      console.error('error: --ttl-days must be a number of days, 0 or more');
+      return 1;
+    }
+    const token = await issueRoleToken(cwd, role, { ttlDays });
     console.log(token);
     return 0;
   } catch (err) {

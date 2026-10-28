@@ -23,6 +23,7 @@ export class StoryError extends Error {
 
 export async function setStoryStatus(root, id, status, role, agent = null) {
   if (!STORY_STATUSES.includes(status)) throw new StoryError(`unknown status: ${status}`);
+  if (status === 'in-dev' && !agent) throw new StoryError('in-dev requires --agent so the claim has an owner');
   const expectedRole = ROLE_FOR_STATUS[status];
   if (!expectedRole) throw new StoryError(`status needs no role: ${status}`);
   if (role !== expectedRole && !(status === 'done' && role === 'po')) {
@@ -39,7 +40,12 @@ export async function setStoryStatus(root, id, status, role, agent = null) {
     throw new StoryError(`${id} cannot move from ${previous} to ${status}`);
   }
 
-  if (previous === status) return state.stories[id];
+  if (previous === status) {
+    if (status === 'in-dev' && story.owner !== agent) {
+      throw new StoryError(`${id} is already claimed by ${story.owner}`);
+    }
+    return state.stories[id];
+  }
 
   story.status = status;
   story.owner = agent ?? role;

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { cp, mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -29,6 +29,14 @@ async function put(repo, rel, body) {
   const path = join(repo, 'docs/agile', rel);
   await mkdir(join(path, '..'), { recursive: true });
   await writeFile(path, body);
+}
+
+function runNpm(repo) {
+  const env = { ...process.env };
+  delete env.NODE_TEST_CONTEXT;
+  delete env.NODE_OPTIONS;
+  const res = spawnSync('npm', ['test'], { cwd: repo, encoding: 'utf8', env });
+  return { status: res.status, output: `${res.stdout}${res.stderr}`.slice(-800) };
 }
 
 function commit(repo, message) {
@@ -95,9 +103,22 @@ dependencies: none
   assert.equal(await run(['advance'], repo), 0);
 
   await run(['next'], repo);
-  await put(repo, 'build/S-002/plan.md', '# plan\n\nFiles: src/app.mjs.\n');
-  await put(repo, 'build/S-002/red.log', '$ node --test\n# fail 2\n');
-  await put(repo, 'build/S-002/green.log', '$ node --test\n# fail 0\n');
+  await put(repo, 'build/S-002/plan.md', '# plan\n\nFiles: src/app.mjs, test/farewell.test.mjs.\n');
+
+  // Real TDD: a failing test first, then the smallest change to green.
+  await writeFile(
+    join(repo, 'test/farewell.test.mjs'),
+    "import { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { greetFarewell } from '../src/app.mjs';\n\ntest('farewells a name', () => {\n  assert.equal(greetFarewell('Ada'), 'Goodbye, Ada!');\n});\n",
+  );
+  const red = runNpm(repo);
+  assert.notEqual(red.status, 0, red.output);
+  await put(repo, 'build/S-002/red.log', `$ npm test\n${red.output}\n`);
+
+  const app = await readFile(join(repo, 'src/app.mjs'), 'utf8');
+  await writeFile(join(repo, 'src/app.mjs'), `${app}\nexport function greetFarewell(name) {\n  const clean = String(name ?? '').trim();\n  if (!clean) throw new Error('name is required');\n  return 'Goodbye, ' + clean + '!';\n}\n`);
+  const green = runNpm(repo);
+  assert.equal(green.status, 0, green.output);
+  await put(repo, 'build/S-002/green.log', `$ npm test\n${green.output}\n`);
   await put(repo, 'build/S-002/review.md', '# Review\n\n## Verdict\npass\n\nreviewer: reviewer-spawn\nimplementer: implementer-spawn\n\n## Findings\n- src/app.mjs:1 tidy. No findings.\n');
 
   commit(repo, 'feat: S-002');

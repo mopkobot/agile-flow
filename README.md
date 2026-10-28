@@ -1,6 +1,6 @@
 # Agile Flow Skills
 
-Nine OpenCode skills that run a real agile delivery lifecycle: one orchestrator, eight roles, hard gates, and enforced role boundaries.
+Ten OpenCode skills that run a real agile delivery lifecycle: one orchestrator, eight delivery roles, one independent auditor, hard gates, and enforced role boundaries.
 
 The flow produces a working increment, not a ceremony transcript. Every phase leaves artifacts on disk, every gate is machine-checked, and every role is forbidden from doing another role's job.
 
@@ -103,7 +103,7 @@ Acceptance criteria verified by test, changed-code coverage at least 80%, lint c
 ## Repository layout
 
 ```
-skills/<name>/SKILL.md   nine skills
+skills/<name>/SKILL.md   ten skills
 bin/agile-flow.mjs       CLI entry
 src/                     state machine, gates, boundaries, reviews, waivers
 templates/               story, ADR, review, state, waiver, retro, postmortem, checklists

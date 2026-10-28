@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { run } from '../src/cli.mjs';
 import { loadState } from '../src/state.mjs';
+import { issueRoleToken, verifyRoleToken } from '../src/identity.mjs';
 
 process.env.AGILE_HUMAN_PASSPHRASE ||= 'test-passphrase';
 
@@ -51,9 +52,9 @@ async function fakeGh(dir, listJson = '[]', createUrl = 'https://github.com/o/r/
 
 test('story status moves dev then qa then done, with role checks', async () => {
   const dir = await repo();
-  assert.equal(await run(['story', 'S-001', 'in-dev', '--role', 'qa'], dir), 1);
-  assert.equal(await run(['story', 'S-001', 'in-dev', '--role', 'dev'], dir), 0);
-  assert.equal(await run(['story', 'S-001', 'in-dev', '--role', 'dev'], dir), 0);
+  assert.equal(await run(['story', 'S-001', 'in-dev', '--role', 'qa', '--agent', 'qa-1'], dir), 1);
+  assert.equal(await run(['story', 'S-001', 'in-dev', '--role', 'dev', '--agent', 'dev-1'], dir), 0);
+  assert.equal(await run(['story', 'S-001', 'in-dev', '--role', 'dev', '--agent', 'dev-1'], dir), 0);
   assert.equal(await run(['story', 'S-001', 'in-qa', '--role', 'dev'], dir), 1);
   assert.equal(await run(['story', 'S-001', 'in-qa', '--role', 'qa'], dir), 0);
   assert.equal(await run(['story', 'S-001', 'done', '--role', 'qa'], dir), 1);
@@ -69,7 +70,7 @@ test('story status refuses a story that failed DoR', async () => {
   const state = await loadState(dir);
   state.stories['S-001'].dor = 'pending';
   await writeFile(join(dir, 'docs/agile/state.json'), JSON.stringify(state));
-  assert.equal(await run(['story', 'S-001', 'in-dev', '--role', 'dev'], dir), 1);
+  assert.equal(await run(['story', 'S-001', 'in-dev', '--role', 'dev', '--agent', 'dev-1'], dir), 1);
 });
 
 test('tracker sync dry-run prints commands without calling gh', async () => {
@@ -82,7 +83,7 @@ test('tracker sync dry-run prints commands without calling gh', async () => {
 
 test('tracker sync creates an issue and labels it for the current story status', async () => {
   const dir = await repo();
-  await run(['story', 'S-001', 'in-dev', '--role', 'dev'], dir);
+  await run(['story', 'S-001', 'in-dev', '--role', 'dev', '--agent', 'dev-1'], dir);
   const gh = await fakeGh(dir);
   const code = await run(['tracker', 'sync'], dir, { env: gh.env });
   assert.equal(code, 0);
@@ -114,10 +115,26 @@ test('tracker removes the previous status label when the card moves', async () =
   const dir = await repo();
   const gh = await fakeGh(dir, '[{"number":7,"title":"S-001 Greet"}]');
   assert.equal(await run(['tracker', 'sync'], dir, { env: gh.env }), 0);
-  await run(['story', 'S-001', 'in-dev', '--role', 'dev'], dir);
+  await run(['story', 'S-001', 'in-dev', '--role', 'dev', '--agent', 'dev-1'], dir);
   assert.equal(await run(['tracker', 'sync'], dir, { env: gh.env }), 0);
   const calls = await gh.log();
   const last = calls.filter((c) => c.startsWith('issue edit')).pop();
   assert.match(last, /--add-label status:in-dev/);
   assert.match(last, /--remove-label status:ready/);
+});
+
+test('two agents cannot hold the same card', async () => {
+  const dir = await repo();
+  assert.equal(await run(['story', 'S-001', 'in-dev', '--role', 'dev', '--agent', 'dev-a'], dir), 0);
+  assert.equal(await run(['story', 'S-001', 'in-dev', '--role', 'dev', '--agent', 'dev-b'], dir), 1);
+  assert.equal(await run(['story', 'S-001', 'in-dev', '--role', 'dev', '--agent', 'dev-a'], dir), 0);
+  assert.equal(await run(['story', 'S-001', 'in-dev', '--role', 'dev', '--agent', 'dev-1'], dir), 1);
+});
+
+test('a token expires and stops signing', async () => {
+  const dir = await repo();
+  const token = await issueRoleToken(dir, 'qa', { ttlDays: 0 });
+  const check = await verifyRoleToken(dir, 'qa', token);
+  assert.equal(check.ok, false);
+  assert.match(check.reason, /expired/);
 });

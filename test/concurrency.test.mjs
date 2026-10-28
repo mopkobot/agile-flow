@@ -52,3 +52,15 @@ test('concurrent phase transitions keep exactly one winner', async () => {
   );
   assert.equal(attempts.filter(Boolean).length, 1);
 });
+
+test('a command holds the lock across load and save', async () => {
+  const dir = await repo();
+  const { withStateLock } = await import('../src/state.mjs');
+  const value = await withStateLock(dir, async () => {
+    const state = await loadState(dir);
+    state.phase = 'discovery';
+    await saveState(dir, state);
+    return (await loadState(dir)).phase;
+  });
+  assert.equal(value, 'discovery');
+});
