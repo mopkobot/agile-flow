@@ -138,9 +138,9 @@ intake → discovery → shaping → ux → architecture → planning
 | discovery | Stack profile | `vision.md`, `personas.md`, `success-metrics.md`, `backlog.md` | G0 | PO + human |
 | shaping | Backlog outline | `stories/<id>.md` | none yet | BA |
 | ux | Stories | `ux/flows.md`, `ux/tokens.json`, `ux/wireframes/<id>.html` | DoR per story after UX | BA, UX, SRE, tech lead, PO |
-| architecture | Ready stories, UX flows | `architecture/system.md`, `nfrs.md`, `fitness-functions.md`, `c4/`, `adrs/` | G1 | architect, tech lead, UX + human |
+| architecture | Ready stories, UX flows | `architecture/system.md`, `nfrs.md`, `fitness-functions.md`, `threat-model.md`, `c4/`, `adrs/`, `glossary.md` | G1 | architect, tech lead, UX + human |
 | planning | G1 green | `plan/sprint-NN.md` | G2 | human |
-| build | G2 green | `build/<story-id>/` plus commits | DoD per story | dev, reviewer, QA |
+| build | G2 green | `build/<story-id>/` plus commits | DoR then DoD per story | tech lead, dev, reviewer, QA |
 | quality | Stories at DoD | `quality/test-strategy.md`, `defects.md`, `evidence/` | folded into G3 | QA |
 | release | Quality green | `release/readiness.md`, `release-notes.md` | G3 | PO, tech lead, architect, SRE + human |
 | operations | G3 green | `operations/` complete, load test recorded | G4 | SRE |
@@ -166,7 +166,7 @@ Gate failure path: retry once with corrective instructions supplied by the faili
 
 Per story, flat sibling spawns. No nesting.
 
-1. `agile-dev` plans the slice; writes `build/<story-id>/plan.md` with files touched, seams, and test list.
+1. `agile-tech-lead` writes `build/<story-id>/plan.md` with files touched, seams, and test list. The developer implements against it.
 2. Test-author spawn writes failing unit tests. `red.log` captures command, output, and failing count.
 3. Implementer spawn writes the minimum code to green. `green.log` captures command, output, and passing count.
 4. Reviewer spawn checks AC coverage, standards, debt, and test quality. Writes `review.md` with verdict.

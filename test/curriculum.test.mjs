@@ -46,3 +46,11 @@ test('dev carries pragmatic, clean code, legacy, and refactoring canon', async (
   }
   assert.equal(validateSkill(join(root, 'agile-dev', 'SKILL.md')).ok, true);
 });
+
+test('the tech lead owns the build plan, not the developer', async () => {
+  const dev = await read('agile-dev');
+  const flow = await read('agile-flow');
+  assert.ok(!/Plan mode/i.test(dev), 'dev must not own a plan mode');
+  assert.match(dev, /plan\.md.*from the tech lead/i);
+  assert.match(flow, /Spawn `agile-tech-lead` to write `docs\/agile\/build\/<story-id>\/plan\.md`/);
+});

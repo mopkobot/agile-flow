@@ -56,9 +56,7 @@ handoff:
 
 ### Modes
 
-You are spawned in one of four modes. Read the mode in the envelope and do only that.
-
-**Plan mode.** Write nothing except `build/<story-id>/plan.md` is the tech lead's job. If spawned in plan mode, produce the file list, seams, and test list, and return. Do not implement.
+You are spawned in one of three modes. Read the mode in the envelope and do only that.
 
 **Test-author mode.** Write failing tests only. No production code.
 

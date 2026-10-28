@@ -46,7 +46,7 @@ intake -> discovery [G0] -> shaping -> ux -> architecture [G1] -> planning [G2]
 
 - **DoR story**: story template, four shaping sign-offs (BA, UX, SRE, tech lead), wireframe present, no blocking open question. Checked with `agile-flow check DoR-<id>` after UX.
 - **G0 scope**: vision, personas, metrics, backlog. PO and human.
-- **G1 design**: architecture, ADRs, NFRs, fitness functions, UX, tech-lead review. Architect, tech lead, UX, human.
+- **G1 design**: architecture, ADRs, NFRs, fitness functions, threat model, glossary, UX, tech-lead review. Architect, tech lead, UX, human.
 - **G2 plan**: sprint scope. Human.
 - **G3 release**: tests, coverage, lint, build, secret scan, load evidence. PO functionality, tech lead debt, architect conformance, SRE supportability, human.
 - **G4 operations**: SLOs live, runbooks, alerts as code, load test recorded. SRE.

@@ -100,7 +100,7 @@ A human waiver is legitimate only when the operator explicitly accepts the risk 
 For each story, in priority order:
 
 0. Run `node bin/agile-flow.mjs check DoR-<story-id>`. The story becomes ready only after UX has supplied its wireframe, so DoR closes at the end of the UX phase. Exit 1 means it is not ready: send it back and do not build it.
-1. Spawn `agile-dev` to write `docs/agile/build/<story-id>/plan.md`.
+1. Spawn `agile-tech-lead` to write `docs/agile/build/<story-id>/plan.md` with the file list, seams, and test list.
 2. Spawn `agile-dev` in test-author mode. It writes failing tests and `red.log`. A `red.log` with zero failures is a failure; escalate rather than continue.
 3. Spawn `agile-dev` in implementer mode. It writes the minimum code and `green.log`.
 4. Spawn `agile-dev` in reviewer mode to write `review.md`. The reviewer must not be the implementer.
