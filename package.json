@@ -33,6 +33,7 @@
     "templates/",
     "install.sh",
     "README.md",
+    "AGENTS.md",
     "LICENSE",
     "NOTICE"
   ],

@@ -137,6 +137,9 @@ fixtures/run-flow.sh       drives intake to retro
 test/                      CLI, gate, concurrency, and end-to-end tests
 docs/specs/                design spec
 docs/plans/                implementation plan
+docs/architecture.md       module map and invariants
+AGENTS.md, CLAUDE.md       agent policy for contributing to this repo
+ops/                       reliability signals and escalation
 ```
 
 ## Validate

@@ -1,0 +1,18 @@
+# Conceptual alert rules for a CLI project. Wire these to CI and repository events,
+# not to a metrics backend.
+alerts:
+  - name: ci-red-on-main
+    when: workflow ci conclusion == failure and branch == main
+    runbook: ops/signals.md#escalation
+
+  - name: skill-validation-failed
+    when: command "agile-flow skills" exits non-zero
+    runbook: ops/signals.md#escalation
+
+  - name: suite-flake
+    when: same test fails on a run with no code change since last green
+    runbook: ops/signals.md#escalation
+
+  - name: audit-never-fails
+    when: five consecutive audit records pass with identical sampled claims
+    runbook: ops/signals.md#escalation

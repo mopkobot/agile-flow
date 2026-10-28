@@ -21,6 +21,7 @@ First published release.
 - Brownfield harness assessment with a fix per gap.
 - Greenfield and brownfield end-to-end fixtures, including a real second sprint.
 - CI on Node 20 and 22.
+- Repository harness: `AGENTS.md`, `CLAUDE.md`, architecture note, reliability signals, PR template.
 
 ### Known limits
 
