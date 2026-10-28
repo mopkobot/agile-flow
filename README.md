@@ -113,7 +113,25 @@ fixtures/run-flow.sh     drives intake to retro
 test/                    CLI and flow tests
 docs/specs/              design spec
 docs/plans/              implementation plan
+.github/workflows/ci.yml runs tests and skill validation on push and PR
 ```
+
+## Design constraints
+
+- Files are authoritative. Chat is disposable; a phase advances only when artifacts on disk and `check` agree.
+- Gates are hard. The orchestrator cannot open one by assertion, and waivers are human-signed with an expiry.
+- Roles are bounded. Each skill declares owned paths and forbidden actions; the CLI rejects writes outside them.
+- Claims are cited. Review findings need `path:line`; QA evidence needs a real command; NFRs need a measurement.
+- Judgment is sampled. An independent auditor at G3 and G4 tries to falsify the record rather than trust it.
+- Parallel work is coordinated. Story status claims a card for one agent; state writes take a lock and reject stale revisions.
+- No estimation, no daily standup, no tracker other than GitHub. Those were deliberate exclusions.
+
+## Known limits
+
+- Role tokens make casual impersonation fail, but an agent holding the human passphrase can still mint tokens. Same-user isolation is not a security boundary.
+- The auditor is a separate spawn by instruction; the CLI records the agent but cannot prove which process ran it.
+- Stack detection covers Node, Python, Go, Rust, Java, and Ruby. Only Node and Ruby are exercised by running tests here; the Maven path is tested when `mvn` is installed.
+- Harness assessment on brownfield is advisory by decision; missing tests or CI are recorded, not blocked.
 
 ## Validate
 
@@ -132,3 +150,7 @@ bash /path/to/agile-flow/fixtures/run-flow.sh /tmp/af-brown brownfield
 ```
 
 The brownfield run must surface the duplicated name-length rule in `docs/agile/architecture/legacy-assessment.md` before any story is built.
+
+## License
+
+MIT. See `LICENSE`.
