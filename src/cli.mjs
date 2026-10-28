@@ -4,6 +4,16 @@ import { initFlow, loadState, saveState, StateError, GATES, agileDir } from './s
 import { detectStack, renderProfile } from './stack.mjs';
 import { nextAction } from './phases.mjs';
 import { recordReview, ReviewError } from './reviews.mjs';
+import { ROLE_SCOPE } from './boundary.mjs';
+import { execFileSync } from 'node:child_process';
+
+function headSha(cwd) {
+  try {
+    return execFileSync('git', ['rev-parse', 'HEAD'], { cwd, encoding: 'utf8' }).trim();
+  } catch {
+    return null;
+  }
+}
 
 export async function run(argv, cwd = process.cwd()) {
   const [command, ...rest] = argv;
@@ -82,6 +92,12 @@ async function cmdStatus(cwd) {
 async function cmdNext(cwd) {
   const state = await loadState(cwd);
   const action = nextAction(state);
+  if (!action.blocked) {
+    if (!state.stageBase) state.stageBase = headSha(cwd);
+    state.activeRole = action.role;
+    state.writeScope = ROLE_SCOPE[action.role] ?? [];
+    await saveState(cwd, state);
+  }
   console.log(`phase: ${action.phase}`);
   console.log(`role: ${action.role}`);
   console.log(`gate: ${action.gate ?? 'none'}`);
