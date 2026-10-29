@@ -12,7 +12,7 @@ The orchestrator moves the card to `in-qa` before spawning you. If the card is s
 ## Inputs
 
 - `docs/agile/stories/` and their acceptance criteria.
-- `docs/agile/build/<story-id>/{red.log,green.log,review.md}`.
+- `docs/agile/build/<story-id>/{red.log,green.log,refactor.log,review.md}`.
 - `docs/agile/ux/flows.md` and wireframes, for interaction states.
 - `docs/agile/architecture/nfrs.md`, for measurable quality targets.
 - `docs/agile/stack-profile.md`, for the commands that exist.

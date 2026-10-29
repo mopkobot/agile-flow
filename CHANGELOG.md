@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented here. Format follows Keep a Changelog; versioning follows SemVer.
 
+## [Unreleased]
+
+### Changed
+
+- The build loop is now RED, GREEN, REFACTOR: `agile-dev` has a refactor mode between implementer and review, writes `build/<story-id>/refactor.log`, and records a reasoned `no refactor:` line when nothing needs restructuring.
+- G3 requires `build/*/refactor.log`, accepts a clean suite or a reasoned "no refactor", and rejects a refactor log that shows a red suite.
+- The tech lead refuses to approve a story whose refactor step is missing or unexplained.
+- The build loop spawns `agile-tech-lead` in review mode for `review.md`; it no longer claims a nonexistent `agile-dev` reviewer mode. The reviewer is never the implementer.
+
 ## [1.0.0] - 2026-10-28
 
 First published release.

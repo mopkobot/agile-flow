@@ -119,6 +119,7 @@ dependencies: none
   const green = runNpm(repo);
   assert.equal(green.status, 0, green.output);
   await put(repo, 'build/S-002/green.log', `$ npm test\n${green.output}\n`);
+  await put(repo, 'build/S-002/refactor.log', 'no refactor: one pure function, no duplication to remove.\n');
   await put(repo, 'build/S-002/review.md', '# Review\n\n## Verdict\npass\n\nreviewer: reviewer-spawn\nimplementer: implementer-spawn\n\n## Findings\n- src/app.mjs:1 tidy. No findings.\n');
 
   commit(repo, 'feat: S-002');

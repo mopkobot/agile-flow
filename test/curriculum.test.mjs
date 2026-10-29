@@ -47,12 +47,34 @@ test('dev carries pragmatic, clean code, legacy, and refactoring canon', async (
   assert.equal(validateSkill(join(root, 'agile-dev', 'SKILL.md')).ok, true);
 });
 
+test('dev runs RED, GREEN, then REFACTOR, and the orchestrator keeps that order', async () => {
+  const dev = await read('agile-dev');
+  const flow = await read('agile-flow');
+  assert.match(dev, /Refactor mode[\s\S]*after GREEN/i);
+  assert.match(dev, /refactor\.log/);
+  assert.match(dev, /no refactor:/i);
+  const red = flow.indexOf('test-author mode');
+  const green = flow.indexOf('implementer mode');
+  const refactor = flow.indexOf('refactor mode');
+  assert.ok(red !== -1 && green > red && refactor > green, 'flow spawn order must be RED, GREEN, REFACTOR');
+});
+
 test('the tech lead owns the build plan, not the developer', async () => {
   const dev = await read('agile-dev');
   const flow = await read('agile-flow');
   assert.ok(!/Plan mode/i.test(dev), 'dev must not own a plan mode');
   assert.match(dev, /plan\.md.*from the tech lead/i);
   assert.match(flow, /Spawn `agile-tech-lead` to write `docs\/agile\/build\/<story-id>\/plan\.md`/);
+});
+
+test('the tech lead reviews the dev work; the dev never writes review.md', async () => {
+  const dev = await read('agile-dev');
+  const flow = await read('agile-flow');
+  const lead = await read('agile-tech-lead');
+  assert.match(dev, /Write `.*review\.md`.*tech lead/i);
+  assert.doesNotMatch(flow, /agile-dev` in reviewer mode/i);
+  assert.match(flow, /Spawn `agile-tech-lead` in review mode to write `review\.md`/);
+  assert.match(lead, /Write `build\/<story-id>\/review\.md`/);
 });
 
 test('the orchestrator asks brownfield operators to define a harness', async () => {

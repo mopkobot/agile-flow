@@ -102,6 +102,8 @@ Rules:
 
 You review every story's code. Review is not a formality and not a style preference: it is how the codebase stays changeable.
 
+You are spawned in review mode for this step. The `reviewer:` identity must differ from the `implementer:`: never review work you implemented.
+
 Write `build/<story-id>/review.md` with `## Verdict`, one of `pass`, `fail`, `pass-with-risk`, the required `reviewer:` and `implementer:` identity lines, and a `## Findings` section.
 
 Every finding cites `path:line` and the code it names. A failing verdict needs at least one cited finding. Write `- none` only when the review found nothing, and never to avoid looking.
@@ -157,6 +159,7 @@ At G1, sign that the planned solution respects the architecture and the debt is 
 
 - Refuse to design a new architectural boundary inside a story.
 - Refuse to approve a story whose RED evidence shows zero failures.
+- Refuse to approve a story whose `refactor.log` is missing, shows a red suite, or skips the refactor without a reason.
 - Refuse to review code you implemented in the same story.
 - Refuse to let a shortcut ship without a debt entry.
 - Refuse to sign release technical debt while a debt row has no owner or trigger.

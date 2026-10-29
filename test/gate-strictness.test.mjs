@@ -21,6 +21,7 @@ test('G3 requires TDD logs and a build review', () => {
   const paths = GATE_DEFS.G3.artifacts.map((a) => a.path);
   assert.ok(paths.includes('build/*/red.log'));
   assert.ok(paths.includes('build/*/green.log'));
+  assert.ok(paths.includes('build/*/refactor.log'));
   assert.ok(paths.includes('build/*/review.md'));
 });
 
@@ -44,6 +45,28 @@ test('TDD evidence rejects a red log with zero failures', async () => {
   });
   const failures = await validateTddEvidence(repo);
   assert.ok(failures.some((f) => /red\.log/.test(f)), failures.join('\n'));
+});
+
+test('TDD evidence rejects a refactor log with neither a clean run nor a reason', async () => {
+  const repo = await artifactRepo({
+    'build/S-001/red.log': '$ node --test\n# fail 2\n',
+    'build/S-001/green.log': '$ node --test\n# fail 0\n',
+    'build/S-001/refactor.log': '$ node --test\n# fail 1\n',
+    'build/S-001/review.md': '# Review\n\n## Verdict\npass\n',
+  });
+  const failures = await validateTddEvidence(repo);
+  assert.ok(failures.some((f) => /refactor\.log/.test(f)), failures.join('\n'));
+});
+
+test('TDD evidence accepts a refactor log that records no refactor was needed', async () => {
+  const repo = await artifactRepo({
+    'build/S-001/red.log': '$ node --test\n# fail 2\n',
+    'build/S-001/green.log': '$ node --test\n# fail 0\n',
+    'build/S-001/refactor.log': 'no refactor: the change is one pure function with no duplication.\n',
+    'build/S-001/review.md': '# Review\n\n## Verdict\npass\n\nreviewer: reviewer-spawn\nimplementer: implementer-spawn\n',
+  });
+  const failures = await validateTddEvidence(repo);
+  assert.deepEqual(failures, []);
 });
 
 test('TDD evidence rejects a review without a pass verdict', async () => {

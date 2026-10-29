@@ -25,5 +25,5 @@ A story is done only when every box is true.
 - [ ] Mockups honored.
 - [ ] No unowned technical debt added; debt register updated.
 - [ ] CI green on trunk.
-- [ ] RED evidence and GREEN evidence recorded in `docs/agile/build/<story-id>/`.
+- [ ] RED, GREEN, and REFACTOR evidence recorded in `docs/agile/build/<story-id>/`.
 - [ ] Reviewer verdict `pass` in `docs/agile/build/<story-id>/review.md`.

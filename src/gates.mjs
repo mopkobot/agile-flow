@@ -46,6 +46,7 @@ export const GATE_DEFS = {
       md('release/release-notes.md', ['## Notes']),
       md('build/*/red.log', []),
       md('build/*/green.log', []),
+      md('build/*/refactor.log', []),
       md('build/*/review.md', ['## Verdict']),
     ],
     roles: ['po', 'tech-lead', 'architect', 'sre', 'human'],
@@ -210,6 +211,15 @@ export async function validateTddEvidence(root) {
   for (const rel of greens) {
     const text = await readFile(join(agileDir(root), rel), 'utf8');
     if (!/#\s*fail\s+0/.test(text)) failures.push(`green.log does not show a clean run: docs/agile/${rel}`);
+  }
+  const refactors = await expandArtifacts(root, 'build/*/refactor.log');
+  for (const rel of refactors) {
+    const text = await readFile(join(agileDir(root), rel), 'utf8');
+    const clean = /#\s*fail\s+0/.test(text);
+    const reasoned = /^\s*no refactor\s*:/im.test(text);
+    if (!clean && !reasoned) {
+      failures.push(`refactor.log shows neither a clean run nor a reasoned "no refactor": docs/agile/${rel}`);
+    }
   }
   const reviews = await expandArtifacts(root, 'build/*/review.md');
   for (const rel of reviews) {

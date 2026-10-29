@@ -328,6 +328,12 @@ $ node --test
 # pass 4
 # fail 0
 EOF
+put "$A/build/S-001/refactor.log" <<'EOF'
+$ node --test
+# tests 4
+# pass 4
+# fail 0
+EOF
 put "$A/build/S-001/review.md" <<'EOF'
 # Review S-001
 

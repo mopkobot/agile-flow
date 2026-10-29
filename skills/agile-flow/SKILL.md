@@ -121,10 +121,11 @@ For each story, always taking the highest-priority ready story first (lowest `pr
 1. Spawn `agile-tech-lead` to write `docs/agile/build/<story-id>/plan.md` with the file list, seams, and test list.
 2. Spawn `agile-dev` in test-author mode. It writes failing tests and `red.log`. A `red.log` with zero failures is a failure; escalate rather than continue.
 3. Spawn `agile-dev` in implementer mode. It writes the minimum code and `green.log`.
-4. Spawn `agile-dev` in reviewer mode to write `review.md`. The reviewer must not be the implementer.
-5. Run the stack test command. Commit on trunk in small slices.
-6. Hand the card to QA: `story <story-id> in-qa --role qa`, then `tracker sync`. Spawn `agile-qa` for story evidence, then evaluate DoD from `templates/checklists.md`.
-7. When G3 closes, mark the card done: `story <story-id> done --role flow`, then `tracker sync`.
+4. Spawn `agile-dev` in refactor mode. It restructures under a green suite, writes `refactor.log`, and commits the refactor separately from the behavior. A green suite that needs no cleanup still gets `refactor.log` with the reason.
+5. Spawn `agile-tech-lead` in review mode to write `review.md`. The reviewer must not be the implementer: the tech lead reviews the dev's work, and if one agent did both, spawn a fresh one.
+6. Run the stack test command. Commit on trunk in small slices.
+7. Hand the card to QA: `story <story-id> in-qa --role qa`, then `tracker sync`. Spawn `agile-qa` for story evidence, then evaluate DoD from `templates/checklists.md`.
+8. When G3 closes, mark the card done: `story <story-id> done --role flow`, then `tracker sync`.
 
 ### 5b. Audit before release
 

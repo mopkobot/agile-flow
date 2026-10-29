@@ -57,7 +57,7 @@ Brownfield repositories are asked one question first: do you want an AI developm
 | `agile-ux` | shaping, ux | Writes flows with empty/loading/error/success states, design tokens, static HTML wireframes, usability notes with contrast checks | G1 interaction quality |
 | `agile-architect` | discovery, architecture | Writes system view, C4 diagrams, measurable NFRs, ADRs, fitness functions, threat model, glossary, legacy assessment; selects patterns from problem and NFRs | G1 structure, G3 conformance |
 | `agile-tech-lead` | shaping, build, release | Writes the per-story solution plan, reviews every change for correctness, code smells and clean code with cited findings, owns the debt register, allocates debt at planning | G1 and G3 technical debt |
-| `agile-dev` | build | Claims a card, writes failing tests, then the minimum code, records RED and GREEN evidence, keeps trunk green, owns CI, IaC and observability hooks | Build complete per story |
+| `agile-dev` | build | Claims a card, writes failing tests, then the minimum code, then refactors under a green suite, records RED, GREEN and REFACTOR evidence, keeps trunk green, owns CI, IaC and observability hooks | Build complete per story |
 | `agile-qa` | quality | Writes test strategy, criterion-by-criterion evidence with executed commands, exploratory charters, a11y/perf/security checks, defect records with severities | Supplies evidence; does not sign release |
 | `agile-sre` | architecture, operations | Writes SLOs and error budgets, runbooks per alert, alerts and dashboards as code, load-test results, incident process, blameless postmortems | G3 supportability, G4 readiness |
 | `agile-auditor` | release, operations | Samples the riskiest claims, reproduces or falsifies each against code and commands, records the audit | Records audits; never signs gates |
@@ -72,7 +72,7 @@ Every role declares owned paths, forbidden actions, and explicit refusal conditi
 | G0 scope | Vision, personas, success metrics, backlog | PO + human |
 | G1 design | Architecture, NFRs with measurements, ADRs, fitness functions, threat model, glossary, UX flows, tokens, wireframes | Architect, tech lead, UX + human |
 | G2 plan | Sprint plan with debt allocation matching the configured percentage; rows resolve to real cards | Human |
-| G3 release | Tests, changed-code coverage, lint, build, secret scan, TDD evidence, cited reviews, QA evidence, audit | PO, tech lead, architect, SRE, human |
+| G3 release | Tests, changed-code coverage, lint, build, secret scan, TDD evidence (RED, GREEN, REFACTOR), cited reviews, QA evidence, audit | PO, tech lead, architect, SRE, human |
 | G4 operations | SLOs, runbooks, alerts as code, load-test result, audit | SRE |
 
 Failure path: retry once with corrective input, then escalate and stop. A gate never opens because retries ran out.
