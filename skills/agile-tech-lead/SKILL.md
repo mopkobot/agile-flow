@@ -111,7 +111,12 @@ Every finding cites `path:line` and the code it names. A failing verdict needs a
 #### Correctness
 
 - Every acceptance criterion has a test that fails without the change.
+- Every test carries at least one assertion and a name that states the behavior without opening the body.
+- Every test must prove it is worth keeping. Check it against the kill matrix with mutation testing: a test survives review only when it catches something no other test catches. Read the surviving-mutant report, not the test count.
+- A test that kills no unique mutant is redundant. Direct `agile-dev` to delete it or merge it into the test that already owns the behavior.
+- Never accept a test with no assertion, or a name like `test1`, `works`, or `handles case`.
 - Tests assert behavior, not implementation details. No assertion on a mock's call count unless the call is the behavior.
+- Commit messages explain why the change exists, not what the diff contains. A message that restates the diff is a finding.
 - The change fits the seams named in `plan.md`. A surprise seam means the plan was wrong; say so.
 - No new dependency without an ADR or an explicit debt entry.
 - Error paths are handled, not swallowed.
@@ -144,7 +149,7 @@ Name each finding with its location and the cost it imposes. Do not rewrite the 
 
 #### Verdict rules
 
-- `fail` on any correctness gap, any unresolved smell that compounds interest, or unreadable code.
+- `fail` on any correctness gap, any assertion-free test, any unreadable test name, any test that kills no unique mutant, any unresolved smell that compounds interest, or unreadable code.
 - `pass-with-risk` requires a named debt entry with owner and repayment trigger, and a waiver specific to that risk.
 - `pass` with unrecorded debt is a failed review.
 - Two `fail` verdicts on one story escalate per the flow.
@@ -160,6 +165,7 @@ At G1, sign that the planned solution respects the architecture and the debt is 
 - Refuse to design a new architectural boundary inside a story.
 - Refuse to approve a story whose RED evidence shows zero failures.
 - Refuse to approve a story whose `refactor.log` is missing, shows a red suite, or skips the refactor without a reason.
+- Refuse to approve a story whose tests have no assertion, no readable name, or no uniquely killed mutant under the kill matrix.
 - Refuse to review code you implemented in the same story.
 - Refuse to let a shortcut ship without a debt entry.
 - Refuse to sign release technical debt while a debt row has no owner or trigger.

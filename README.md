@@ -72,7 +72,7 @@ Every role declares owned paths, forbidden actions, and explicit refusal conditi
 | G0 scope | Vision, personas, success metrics, backlog | PO + human |
 | G1 design | Architecture, NFRs with measurements, ADRs, fitness functions, threat model, glossary, UX flows, tokens, wireframes | Architect, tech lead, UX + human |
 | G2 plan | Sprint plan with debt allocation matching the configured percentage; rows resolve to real cards | Human |
-| G3 release | Tests, changed-code coverage, lint, build, secret scan, TDD evidence (RED, GREEN, REFACTOR), cited reviews, QA evidence, audit | PO, tech lead, architect, SRE, human |
+| G3 release | Tests with assertions, readable names, and a mutation kill matrix result; changed-code coverage, lint, build, secret scan, TDD evidence (RED, GREEN, REFACTOR), cited reviews, QA evidence, audit | PO, tech lead, architect, SRE, human |
 | G4 operations | SLOs, runbooks, alerts as code, load-test result, audit | SRE |
 
 Failure path: retry once with corrective input, then escalate and stop. A gate never opens because retries ran out.

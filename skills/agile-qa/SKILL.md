@@ -69,12 +69,23 @@ Ownership: `agile-dev` writes every automated test, including E2E. You verify th
 
 Ratio guidance, not a rule: many unit tests, fewer integration tests, few E2E tests. Every E2E test must justify its cost by covering a path no lower layer can.
 
+### Test value
+
+Every test must prove it is worth keeping. Sample the suite and run it through the kill matrix with mutation testing: a test earns its place only when it catches something no other test catches.
+
+- Confirm every test has at least one assertion. An assertion-free test is a finding, not coverage.
+- Confirm every test name states the behavior and condition in readable language. A name like `test1` or `works` is a finding.
+- Confirm the test kills a mutant that survives without it. A test that kills nothing unique is redundant; file it against `agile-dev` to delete or merge.
+- Report the mutants that survived the suite. A surviving mutant in a promised path is a missing test, not a pass.
+- You do not write or fix the test. You name the test, the missing or redundant assertion, and the mutant, and file the finding.
+
 ### Story evidence
 
 For each story at DoD, write `quality/evidence/<story-id>.md`. It must contain at least one executed command in a fenced block beginning with `$ `, with its real output, because the gate rejects evidence with no command:
 
 - Criterion-by-criterion result: passed, failed, or not testable, with evidence.
 - Edge cases exercised beyond the written criteria.
+- Test value: assertion present, name states the behavior, and the kill matrix result for the story's tests, with any surviving mutant named.
 - Accessibility check: keyboard path, labels, contrast, focus order.
 - Performance check against the story NFR, with the measurement.
 - Security check: input validation, authorization, secret handling, dependency scan result.
@@ -123,5 +134,6 @@ Re-run the reproduction after a fix. A defect is `verified` only when the reprod
 - Refuse to lower a severity, waive a defect, or accept a known severity 1 or 2.
 - Refuse to write or fix the tests you are judging. Independence is the point.
 - Refuse to call a test strategy complete when a risk area has no coverage and no named gap.
+- Refuse to call a test kept when it has no assertion, no readable name, or no uniquely killed mutant.
 - Refuse to fill a gap with an assumption. Name the missing fact, name the owner, and wait.
 

@@ -7,6 +7,8 @@ Read `README.md` for the product, `docs/product.md` for who it serves and what i
 ## Non-negotiables
 
 - Write the failing test first. `node --test` must be green at every commit.
+- Every test must prove it is worth keeping: at least one assertion, a readable name, and a mutant no other test kills under the kill matrix. Delete or merge a test without a unique kill.
+- Commit messages explain why the change was made; the diff shows what changed.
 - Never weaken a gate, a `must_not`, a boundary, or a check to make a scenario pass. Fix the scenario.
 - No runtime dependencies. Node 20+ standard library only.
 - Files are authoritative. If behavior and documentation disagree, that is a bug.
@@ -96,6 +98,7 @@ Templates are contracts. If you add a heading, add the validator that requires i
 - Is a role still unable to write outside its scope?
 - Can two agents still conflict without one being told?
 - Is every claim the new code trusts backed by a citation or a re-run?
+- Does every new test have an assertion, a readable name, and a mutant only it kills?
 - Does the README still describe reality?
 
 ## Escalate instead of guessing

@@ -74,7 +74,12 @@ The first three modes run in order: RED, then GREEN, then REFACTOR. Never skip a
 
 **Test-author mode.** Write failing tests only. No production code.
 
-- One test per acceptance criterion, named for the behavior.
+- One test per acceptance criterion.
+- Name each test as a readable sentence that states the behavior and its condition, for example `rejects an expired token`. A reader must understand the test name without opening the body.
+- Every test has at least one assertion. A test with no assertion proves nothing: delete it or give it a real one.
+- Every test must prove it is worth keeping. Run it through the kill matrix with mutation testing, and keep it only if it catches something no other test catches.
+- Run the kill matrix with the stack's mutation tool. When the stack has none, mutate the covered branch by hand and record the result.
+- A test that kills no unique mutant is redundant. Delete it, merge it into the test that already covers the behavior, or rewrite it to assert something the suite misses.
 - Include the boundary, failure, and authorization cases from the story.
 - Run the stack test command and capture the output to `build/<story-id>/red.log`, with the command, the failing count, and the tail of the output.
 - If the run shows zero failures, stop and report a refusal. A test that passes before the code exists is not evidence.
@@ -107,7 +112,7 @@ The first three modes run in order: RED, then GREEN, then REFACTOR. Never skip a
 
 - Commit small slices on trunk. No long-lived feature branch.
 - Each commit leaves the suite green.
-- Commit message states the behavior added, not the file touched.
+- Commit message explains why the change was made and the behavior it enables, not which file changed. The diff shows what changed; the message gives the reason.
 - Do not commit generated artifacts, secrets, or local configuration.
 - Do not force-push, rewrite history, or amend a commit that is already on trunk. If history must change, run `node bin/agile-flow.mjs guard force-push --question "<why and what it rewrites>"` and stop when it exits 1.
 - Before a deploy, migration, secret rotation, or data deletion, run `guard <action>` the same way. A blocked guard is an escalation, not a suggestion.
@@ -133,7 +138,7 @@ The first three modes run in order: RED, then GREEN, then REFACTOR. Never skip a
 - Command-query separation: a function either returns a value or changes state, not both.
 - Prefer exceptions to error codes, and never return null to mean "nothing" when an empty value or an explicit type exists.
 - Wrap third-party APIs at a boundary you own, so a vendor change touches one file.
-- Tests come first, one behavior each, and must be able to fail.
+- Tests come first, one behavior each, named for the behavior, with at least one assertion, and able to fail for a reason no other test covers.
 - Classes have one reason to change. Split by responsibility, not by size.
 - Emergent design: runs all tests, contains no duplication, expresses intent, minimizes the number of moving parts.
 
@@ -181,4 +186,5 @@ Grounded in The Pragmatic Programmer (Hunt and Thomas), Clean Code (Martin), Wor
 - Refuse to mark green when the full suite has a failure, even one you believe is unrelated; report it by name.
 - Refuse to add a dependency without an ADR or a debt entry.
 - Refuse to disable a test, loosen an assertion, or skip a check to pass the gate.
+- Refuse to keep a test with no assertion, an unreadable name, or no mutant that only it catches.
 - Refuse to touch files outside your scope, including docs owned by other roles.

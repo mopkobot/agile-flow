@@ -6,6 +6,8 @@ All notable changes to this project are documented here. Format follows Keep a C
 
 ### Changed
 
+- Tests must earn their place: `agile-dev` writes one assertion minimum and a readable behavior name, and keeps a test only when the kill matrix shows it catches a mutant no other test catches. `agile-tech-lead` fails a review on an assertion-free test, an unreadable name, or a redundant test, and `agile-qa` reports test value with the mutation result.
+- Commit messages explain why a change was made; the diff carries the what. `agile-dev`, the tech lead, `CONTRIBUTING.md`, and `AGENTS.md` say so.
 - The build loop is now RED, GREEN, REFACTOR: `agile-dev` has a refactor mode between implementer and review, writes `build/<story-id>/refactor.log`, and records a reasoned `no refactor:` line when nothing needs restructuring.
 - G3 requires `build/*/refactor.log`, accepts a clean suite or a reasoned "no refactor", and rejects a refactor log that shows a red suite.
 - The tech lead refuses to approve a story whose refactor step is missing or unexplained.

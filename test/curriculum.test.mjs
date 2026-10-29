@@ -59,6 +59,22 @@ test('dev runs RED, GREEN, then REFACTOR, and the orchestrator keeps that order'
   assert.ok(red !== -1 && green > red && refactor > green, 'flow spawn order must be RED, GREEN, REFACTOR');
 });
 
+test('every test must earn its place through the kill matrix', async () => {
+  const dev = await read('agile-dev');
+  const qa = await read('agile-qa');
+  const lead = await read('agile-tech-lead');
+  for (const doc of [dev, qa, lead]) {
+    assert.match(doc, /prove it is worth keeping/i);
+    assert.match(doc, /kill matrix/i);
+    assert.match(doc, /mutation testing/i);
+    assert.match(doc, /no other test catches/i);
+    assert.match(doc, /assertion/i);
+  }
+  assert.match(dev, /readable sentence/i);
+  assert.match(dev, /why the change was made/i);
+  assert.match(lead, /fail` on .*assertion-free test/i);
+});
+
 test('the tech lead owns the build plan, not the developer', async () => {
   const dev = await read('agile-dev');
   const flow = await read('agile-flow');

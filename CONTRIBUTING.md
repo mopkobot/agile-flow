@@ -23,9 +23,22 @@ Skills declare what they must not do. Do not weaken a `must_not` to make a scena
 - Any new gate must be refused when its artifacts, checks, or sign-offs are missing. Test the refusal, not only the pass.
 - Coverage for new code: changed-code rows when available.
 
+## Test rules
+
+Every test must prove it is worth keeping. A test enters the suite only when all four hold:
+
+- It has at least one assertion.
+- Its name reads as the behavior and condition, so a reader understands it without opening the body.
+- It fails for the reason the change could break.
+- It survives the kill matrix with mutation testing: it catches something no other test catches. A test that kills no unique mutant is deleted or merged.
+
+Run the mutation tool the stack provides. When there is none, mutate the covered branch by hand and record the result. Never keep a test for the coverage number alone.
+
 ## Commit style
 
 Conventional commits: `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `chore:`. One coherent change per commit. Tests and docs in the same commit as the behavior they describe.
+
+The subject states why the change was made; the body explains the reason and the behavior it enables. The diff shows what changed. A message that only restates the diff is not a commit message.
 
 ## Reporting a security issue
 
